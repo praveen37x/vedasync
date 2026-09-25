@@ -1,0 +1,10 @@
+.git
+.gitignore
+.vercel
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.db-wal
+*.db-shm
+*.db-journal

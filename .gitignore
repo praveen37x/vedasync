@@ -1,0 +1,21 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# SQLite temp files
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Vercel CLI
+.vercel/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db

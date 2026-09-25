@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vedasync - AI Vedic Astrology & Kundli Platform</title>
+  <meta name="description" content="Vedasync is a premium, AI-powered Vedic astrology application offering personalized consultations, interactive birth charts, compatibility matching, and daily Panchang.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='none' stroke='%23F59E0B' stroke-width='2'/%3E%3Cpath d='M50 15 L50 85 M15 50 L85 50 M25 25 L75 75 M25 75 L75 25' stroke='%23F59E0B' stroke-width='1'/%3E%3Ccircle cx='50' cy='50' r='5' fill='%23F59E0B'/%3E%3C/svg%3E">
+  
+  <!-- Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Core Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Starry Background Canvas -->
+  <canvas id="starfield"></canvas>
+  <div class="nebula-overlay"></div>
+
+  <!-- Header / Navigation Bar -->
+  <header class="header">
+    <div class="logo-area" id="btn-home-logo">
+      <svg class="logo-icon" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="45" fill="none" stroke="#F59E0B" stroke-width="2"/>
+        <path d="M50 10 L50 90 M10 50 L90 50 M22 22 L78 78 M22 78 L78 22" stroke="rgba(245, 158, 11, 0.4)" stroke-width="1.5"/>
+        <polygon points="50,25 58,42 75,50 58,58 50,75 42,58 25,50 42,42" fill="#F59E0B"/>
+      </svg>
+      <span class="logo-text">Veda<span class="gold-text">sync</span></span>
+    </div>
+    <nav class="header-nav-links" style="display: flex; gap: 20px; align-items: center; margin-left: 20px;">
+      <a href="#" id="link-nav-astrologers" style="color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: var(--transition-smooth); font-family: var(--font-outfit);">Astrologers</a>
+      <a href="#" id="link-nav-pricing" style="color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: var(--transition-smooth); font-family: var(--font-outfit);">Pricing</a>
+      <a href="#" id="link-nav-careers" style="color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: var(--transition-smooth); font-family: var(--font-outfit);">Careers</a>
+      <a href="#" id="link-nav-about" style="color: var(--text-secondary); text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: var(--transition-smooth); font-family: var(--font-outfit);">About Us</a>
+    </nav>
+    <div class="header-actions" style="display: flex; gap: 12px; align-items: center; margin-left: auto;">
+      <button class="btn-api-key" id="btn-open-settings" title="Gemini API Settings">
+        <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+        </svg>
+        <span>API Settings</span>
+      </button>
+      <button class="btn-api-key" id="btn-header-auth" style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.25); color: var(--accent-purple);">
+        <span>Sign In</span>
+      </button>
+      <div id="header-wallet-badge" class="header-wallet-badge hidden font-outfit" style="display: flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.08); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(245, 158, 11, 0.25); color: var(--gold-light); cursor: pointer; margin-right: 8px;" title="Recharge Wallet">
+        <span>🪙 ₹<span id="header-wallet-balance">100.00</span></span>
+      </div>
+      <div id="header-user-badge" class="header-user-badge hidden font-outfit" style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.05); padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.08);">
+        <span id="header-username" style="font-size: 0.85rem; font-weight: 500;">Arjun</span>
+        <button id="btn-logout" class="btn-logout-small" title="Log Out" style="background: none; border: none; color: var(--text-dark); cursor: pointer; display: flex; align-items: center; padding: 2px; transition: var(--transition-smooth);">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; margin-left: 4px;">
+            <path d="M10.09 15.59L11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- LANDING PAGE (Enter Birth Details) -->
+  <main id="landing-page" class="landing-container active">
+    <div class="hero-section">
+      <div class="zodiac-wheel-wrapper">
+        <svg class="zodiac-wheel" viewBox="0 0 200 200">
+          <circle cx="100" cy="100" r="95" fill="none" stroke="rgba(245, 158, 11, 0.2)" stroke-width="2"/>
+          <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(245, 158, 11, 0.1)" stroke-width="1"/>
+          <!-- Star/Cross Lines -->
+          <line x1="100" y1="5" x2="100" y2="195" stroke="rgba(245, 158, 11, 0.15)" stroke-width="0.8"/>
+          <line x1="5" y1="100" x2="195" y2="100" stroke="rgba(245, 158, 11, 0.15)" stroke-width="0.8"/>
+          <line x1="32.8" y1="32.8" x2="167.2" y2="167.2" stroke="rgba(245, 158, 11, 0.1)" stroke-width="0.8"/>
+          <line x1="32.8" y1="167.2" x2="167.2" y2="32.8" stroke="rgba(245, 158, 11, 0.1)" stroke-width="0.8"/>
+          <!-- Outer rings & division markings -->
+          <circle cx="100" cy="100" r="90" fill="none" stroke="rgba(245, 158, 11, 0.15)" stroke-width="0.5"/>
+          <!-- Glyphs / Astrological Shapes -->
+          <g transform="translate(100, 100) scale(0.6)">
+            <polygon points="0,-120 20,-70 70,-70 30,-30 50,20 0,0 -50,20 -30,-30 -70,-70 -20,-70" fill="none" stroke="rgba(245, 158, 11, 0.3)" stroke-width="2"/>
+            <circle cx="0" cy="0" r="25" fill="none" stroke="rgba(245, 158, 11, 0.5)" stroke-width="1.5"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="hero-text-content">
+        <h1 class="hero-title animate-fade-in">Align Your Destiny with <span class="gradient-text">Vedasync</span></h1>
+        <p class="hero-subtitle animate-fade-in-delayed">Experience the ancient wisdom of Vedic Astrology unified with modern intelligence. Chat with your celestial guide, cast your Lagna Kundli, and map cosmic compatibility.</p>
+      </div>
+    </div>
+
+    <!-- Details Form Card -->
+    <div class="form-card-wrapper animate-slide-up">
+      <div class="glass-card main-form-card">
+        <div class="card-header">
+          <h2>Enter Birth Details</h2>
+          <p>Cast your birth coordinates for personalized AI consultations</p>
+        </div>
+        <form id="birth-details-form" class="details-form">
+          <div class="form-row">
+            <div class="input-group">
+              <label for="birth-name">Full Name</label>
+              <input type="text" id="birth-name" placeholder="E.g., Arjun Sharma" required class="glass-input">
+            </div>
+          </div>
+
+          <div class="form-row col-3">
+            <div class="input-group">
+              <label for="birth-date">Date of Birth</label>
+              <input type="date" id="birth-date" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="birth-time">Time of Birth</label>
+              <input type="time" id="birth-time" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="birth-place">Place of Birth</label>
+              <input type="text" id="birth-place" placeholder="E.g., New Delhi, India" required class="glass-input">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-gold font-outfit">
+              <span>Cast Natal Chart & Chat</span>
+              <svg class="btn-icon" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+              </svg>
+            </button>
+            <button type="button" id="btn-skip-details" class="btn-secondary font-outfit">
+              <span>Skip with Current Time</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Cosmic Features Grid -->
+    <section class="marketing-section animate-fade-in-delayed">
+      <h2 class="section-title">Cosmic Integration</h2>
+      <p class="section-subtitle">Ancient celestial intelligence meets modern browser convenience</p>
+      
+      <div class="features-grid">
+        <div class="feature-card glass-card">
+          <div class="feature-icon">✨</div>
+          <h3>AI Consultations</h3>
+          <p>Real-time dialogues with Acharya Aditya, an AI advisor trained on traditional Vedic Jyotish shastras.</p>
+        </div>
+        <div class="feature-card glass-card">
+          <div class="feature-icon">🪐</div>
+          <h3>Interactive Charts</h3>
+          <p>Instantly cast and explore D1 Lagna, Moon, and D9 Navamsha charts in North or South Indian styles.</p>
+        </div>
+        <div class="feature-card glass-card">
+          <div class="feature-icon">💖</div>
+          <h3>Compatibility Match</h3>
+          <p>Run 36-Guna Ashtakoota compatibility analysis with detailed breakdowns of health, love, and temperament.</p>
+        </div>
+        <div class="feature-card glass-card">
+          <div class="feature-icon">☀️</div>
+          <h3>Daily Astro-Weather</h3>
+          <p>Stay aligned with Rahu Kaal, Abhijit Muhurta, Tithi, and Nakshatra changes computed locally.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Daily Horoscope Zodiac Grid -->
+    <section class="marketing-section">
+      <h2 class="section-title">Daily Horoscopes</h2>
+      <p class="section-subtitle">Select your Moon/Sun sign for today's predictions</p>
+      
+      <div class="horoscope-grid font-outfit">
+        <div class="zodiac-card glass-card" data-sign="Aries">
+          <div class="zodiac-symbol">♈</div>
+          <h3>Aries</h3>
+          <span class="zodiac-date">Mesha</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Taurus">
+          <div class="zodiac-symbol">♉</div>
+          <h3>Taurus</h3>
+          <span class="zodiac-date">Vrishabha</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Gemini">
+          <div class="zodiac-symbol">♊</div>
+          <h3>Gemini</h3>
+          <span class="zodiac-date">Mithuna</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Cancer">
+          <div class="zodiac-symbol">♋</div>
+          <h3>Cancer</h3>
+          <span class="zodiac-date">Karka</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Leo">
+          <div class="zodiac-symbol">♌</div>
+          <h3>Leo</h3>
+          <span class="zodiac-date">Simha</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Virgo">
+          <div class="zodiac-symbol">♍</div>
+          <h3>Virgo</h3>
+          <span class="zodiac-date">Kanya</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Libra">
+          <div class="zodiac-symbol">♎</div>
+          <h3>Libra</h3>
+          <span class="zodiac-date">Tula</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Scorpio">
+          <div class="zodiac-symbol">♏</div>
+          <h3>Scorpio</h3>
+          <span class="zodiac-date">Vrishchika</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Sagittarius">
+          <div class="zodiac-symbol">♐</div>
+          <h3>Sagittarius</h3>
+          <span class="zodiac-date">Dhanu</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Capricorn">
+          <div class="zodiac-symbol">♑</div>
+          <h3>Capricorn</h3>
+          <span class="zodiac-date">Makara</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Aquarius">
+          <div class="zodiac-symbol">♒</div>
+          <h3>Aquarius</h3>
+          <span class="zodiac-date">Kumbha</span>
+        </div>
+        <div class="zodiac-card glass-card" data-sign="Pisces">
+          <div class="zodiac-symbol">♓</div>
+          <h3>Pisces</h3>
+          <span class="zodiac-date">Meena</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="marketing-section">
+      <h2 class="section-title">How It Works</h2>
+      <div class="steps-timeline font-outfit">
+        <div class="step-item">
+          <div class="step-number">1</div>
+          <h4>Cast Coordinates</h4>
+          <p>Input your name, date, time, and city of birth to establish your cosmic coordinates.</p>
+        </div>
+        <div class="step-item">
+          <div class="step-number">2</div>
+          <h4>Map Astrological Blueprint</h4>
+          <p>Analyze the SVG charts and coordinate tables calculated via sidereal cycle math.</p>
+        </div>
+        <div class="step-item">
+          <div class="step-number">3</div>
+          <h4>Consult the Sage</h4>
+          <p>Ask questions about wealth, relationships, health, or request spiritual remedy instructions.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing Paths -->
+    <section class="marketing-section">
+      <h2 class="section-title">Choose Your Path</h2>
+      <div class="pricing-grid font-outfit">
+        <div class="pricing-card glass-card">
+          <h3 class="plan-name">Sadhaka (Free)</h3>
+          <div class="plan-price">₹0<span>/ forever</span></div>
+          <ul class="plan-features">
+            <li>✓ Simulated Astrologer Chat</li>
+            <li>✓ Lagna (D1) Kundli Chart</li>
+            <li>✓ Full Ashtakoota Compatibility</li>
+            <li>✓ Daily Panchang & Muhurtas</li>
+          </ul>
+          <button type="button" class="btn-secondary select-free-plan-btn">Continue Free</button>
+        </div>
+        <div class="pricing-card glass-card featured">
+          <div class="card-badge">Celestial</div>
+          <h3 class="plan-name">Jyotishi Premium</h3>
+          <div class="plan-price">₹149<span>/ month</span></div>
+          <ul class="plan-features">
+            <li>✓ Real-time AI consultation (Gemini)</li>
+            <li>✓ D1, Moon, and D9 Navamsha Charts</li>
+            <li>✓ Downloadable PDF Reports</li>
+            <li>✓ Voice chat input feature</li>
+            <li>✓ Ad-free experience & Priority matching</li>
+          </ul>
+          <button type="button" class="btn-gold select-premium-plan-btn">Upgrade Now</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQs Accordion -->
+    <section class="marketing-section faq-section">
+      <h2 class="section-title">Frequently Asked Questions</h2>
+      <div class="accordion-container">
+        <div class="accordion-item glass-card">
+          <button type="button" class="accordion-header">
+            <span>Is my birth data safe?</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-content">
+            <p>Yes. All calculations are executed entirely inside your browser. No personal data, location data, or birth times are ever sent to external servers.</p>
+          </div>
+        </div>
+        <div class="accordion-item glass-card">
+          <button type="button" class="accordion-header">
+            <span>How are planetary coordinates calculated?</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-content">
+            <p>Vedasync uses a sidereal astronomical calculation engine relative to the J2000 epoch, adjusting planetary longitudes and houses according to Lahiri Ayanamsa parameters.</p>
+          </div>
+        </div>
+        <div class="accordion-item glass-card">
+          <button type="button" class="accordion-header">
+            <span>How do I connect the real Gemini AI?</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-content">
+            <p>Simply register a free API Key on Google AI Studio, open "API Settings" in the top bar of Vedasync, paste the key, and save. The app immediately upgrades to active consultations.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Us Section -->
+    <section class="marketing-section">
+      <h2 class="section-title">Get in Touch</h2>
+      <p class="section-subtitle">Reach out for custom questions or platform support</p>
+      
+      <div class="glass-card" style="width: 100%; max-width: 600px; padding: 30px;">
+        <form id="contact-us-form" class="details-form">
+          <div class="form-row">
+            <div class="input-group">
+              <label for="contact-name">Your Name</label>
+              <input type="text" id="contact-name" placeholder="Arjun Sharma" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="contact-email">Email Address</label>
+              <input type="email" id="contact-email" placeholder="you@example.com" required class="glass-input">
+            </div>
+          </div>
+          <div class="input-group" style="margin-top: 15px;">
+            <label for="contact-subject">Subject</label>
+            <input type="text" id="contact-subject" placeholder="E.g., Kundli casting help" required class="glass-input">
+          </div>
+          <div class="input-group" style="margin-top: 15px;">
+            <label for="contact-message">Message</label>
+            <textarea id="contact-message" placeholder="Write your message here..." rows="5" required class="glass-input" style="resize: vertical; font-family: inherit; font-size: 0.95rem; line-height: 1.5; padding: 12px; width: 100%; box-sizing: border-box;"></textarea>
+          </div>
+          <div class="form-actions center" style="margin-top: 20px;">
+            <button type="submit" class="btn-gold font-outfit" style="width: 100%;">
+              <span>Send Message</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="marketing-footer font-outfit">
+      <div style="display: flex; gap: 24px; justify-content: center; margin-bottom: 16px; flex-wrap: wrap;">
+        <a href="#" id="link-foot-astrologers" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: var(--transition-smooth);">Meet Astrologers</a>
+        <a href="#" id="link-foot-pricing" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: var(--transition-smooth);">Pricing Plans</a>
+        <a href="#" id="link-foot-careers" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: var(--transition-smooth);">Join Our Team</a>
+        <a href="#" id="link-foot-about" style="color: var(--text-secondary); text-decoration: none; font-size: 0.85rem; transition: var(--transition-smooth);">About Us</a>
+      </div>
+      <p>© 2026 Vedasync. All cosmic cycles aligned.</p>
+      <p class="disclaimer">Disclaimer: Vedic predictions and consultation outcomes are for guidance, spiritual support, and educational purposes only. They do not constitute formal medical, financial, or legal advice.</p>
+    </footer>
+  </main>
+
+  <!-- MAIN APPLICATION SHELL -->
+  <main id="app-interface" class="app-container hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="user-brief-card glass-card">
+        <div class="user-avatar">
+          <span id="user-initial">A</span>
+        </div>
+        <div class="user-meta">
+          <h4 id="display-user-name">Arjun Sharma</h4>
+          <span id="display-user-birth">03 June 1995 • 14:30</span>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-target="tab-chat">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+          </svg>
+          <span>Cosmic Chat</span>
+        </button>
+
+        <button class="nav-btn" data-target="tab-chart">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span>Lagna Kundli</span>
+        </button>
+
+        <button class="nav-btn" data-target="tab-milan">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+          <span>Kundli Milan</span>
+        </button>
+
+        <button class="nav-btn" data-target="tab-panchang">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5H7v2h5v-2zm4 0h-3v2h3v-2zm-4 4H7v2h5v-2zm4 0h-3v2h3v-2z"/>
+          </svg>
+          <span>Daily Panchang</span>
+        </button>
+
+        <button class="nav-btn" data-target="tab-gurus">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+          <span>Consult Gurus</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn-text-only" id="btn-edit-birth">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+          </svg>
+          <span>Edit Birth Details</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- CONTENT DISPLAY AREA -->
+    <section class="main-content-area">
+      
+      <!-- TAB: COSMIC CHAT -->
+      <div id="tab-chat" class="tab-panel active">
+        <div class="chat-wrapper glass-card">
+          <div class="chat-header">
+            <div class="avatar-glow">
+              <svg class="astrologer-avatar" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="#1E1B4B" stroke="#F59E0B" stroke-width="2"/>
+                <polygon points="50,15 62,40 85,50 62,60 50,85 38,60 15,50 38,40" fill="#F59E0B"/>
+                <circle cx="50" cy="50" r="10" fill="#FFF" opacity="0.8"/>
+              </svg>
+            </div>
+            <div class="chat-title-info">
+              <h3>Acharya Aditya</h3>
+              <div class="online-indicator">
+                <span class="pulse-dot"></span>
+                <span id="chat-mode-label" class="label-text">Simulated Mode (Vedic Intel)</span>
+              </div>
+            </div>
+            <button class="btn-clear-chat" id="btn-clear-chat-history" title="Clear Chat History">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="chat-messages-container" id="chat-messages">
+            <!-- Messages populated via JS -->
+          </div>
+
+          <!-- Quick Suggestion chips -->
+          <div class="quick-chips-container">
+            <button class="chip-btn" data-query="How does my Nakshatra shape my career potential?">💼 Career Path</button>
+            <button class="chip-btn" data-query="What does my moon sign tell about my relationship needs?">💖 Love & Union</button>
+            <button class="chip-btn" data-query="Which physical tendencies/Doshas are highlighted in my chart?">🌿 Health & Dosha</button>
+            <button class="chip-btn" data-query="Explain the significance of my Ascendant (Lagna) sign.">🌟 Lagna Sign</button>
+          </div>
+
+          <div class="chat-input-bar">
+            <form id="chat-input-form" class="chat-form">
+              <input type="text" id="chat-user-message" placeholder="Ask about career, love, health, or life paths..." autocomplete="off" required class="glass-input">
+              <button type="button" id="btn-mic-input" class="btn-mic" title="Voice Input (Speech-to-Text)">
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.42 2.72 6.2 6 6.72V21h2v-3.28c3.28-.52 6-3.3 6-6.72h-1.7z"/>
+                </svg>
+              </button>
+              <button type="submit" class="btn-send-gold" id="btn-send-message">
+                <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                </svg>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: LAGNA KUNDLI -->
+      <div id="tab-chart" class="tab-panel">
+        
+        <!-- Interactive Chart Toolbar Bar -->
+        <div class="glass-card chart-toolbar-card">
+          <div class="toolbar-left">
+            <button class="chart-ctrl-btn explore-btn" id="btn-explore-mode" title="Toggle Explore Connections Signature Mode">
+              <span class="ctrl-icon">✨</span>
+              <span class="ctrl-label">Explore Connections</span>
+            </button>
+            <label class="switch-control" title="Toggle interactive connector lines on chart">
+              <input type="checkbox" id="toggle-connections" checked>
+              <span class="switch-slider"></span>
+              <span class="switch-text">Show Connections</span>
+            </label>
+            <label class="switch-control" title="Overlay live Gochar planetary transits">
+              <input type="checkbox" id="toggle-transits">
+              <span class="switch-slider"></span>
+              <span class="switch-text">Gochar Transits</span>
+            </label>
+            <div id="transit-date-container" class="transit-date-wrapper hidden">
+              <label for="transit-date-picker" class="transit-date-label">Date:</label>
+              <input type="date" id="transit-date-picker" class="glass-date-input" title="Check transits for any past or future date">
+            </div>
+          </div>
+
+          <div class="toolbar-right">
+            <button class="chart-ctrl-btn" id="btn-clear-highlights" title="Clear active highlights and line connectors">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="chart-ctrl-btn share-btn" id="btn-share-chart" title="Generate shareable chart snapshot card">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+              <span>Share Snapshot</span>
+            </button>
+            <button class="chart-ctrl-btn" id="btn-print-report" title="Print / Save Astrological Report">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+              <span>PDF Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Life Area Lens Selector Bar -->
+        <div class="life-area-lens-bar font-outfit">
+          <span class="lens-label">Life Area Lens:</span>
+          <div class="lens-pills" id="lens-pills-container">
+            <button class="lens-pill active" data-lens="all"><span class="pill-icon">🌌</span><span>All Chart</span></button>
+            <button class="lens-pill" data-lens="career"><span class="pill-icon">💼</span><span>Career</span></button>
+            <button class="lens-pill" data-lens="marriage"><span class="pill-icon">💍</span><span>Marriage</span></button>
+            <button class="lens-pill" data-lens="finance"><span class="pill-icon">💰</span><span>Finance</span></button>
+            <button class="lens-pill" data-lens="health"><span class="pill-icon">🌿</span><span>Health</span></button>
+            <button class="lens-pill" data-lens="education"><span class="pill-icon">📚</span><span>Education</span></button>
+            <button class="lens-pill" data-lens="spirituality"><span class="pill-icon">🕉️</span><span>Spirituality</span></button>
+            <button class="lens-pill" data-lens="property"><span class="pill-icon">🏠</span><span>Property</span></button>
+          </div>
+        </div>
+
+        <!-- Explore Connections Status Banner (Visible in Explore Mode) -->
+        <div id="explore-status-banner" class="explore-status-banner hidden">
+          <div class="banner-badge">✨ Explore Connections Active</div>
+          <div class="banner-text" id="explore-banner-text">Click any house or planet to trace its aspects, lordships, and conjunction chains.</div>
+        </div>
+
+        <div class="panel-layout col-2">
+          
+          <!-- Chart Visualizer Card -->
+          <div class="glass-card chart-visualizer-card">
+            <div class="card-header-actions">
+              <div class="chart-header-left">
+                <h2 id="chart-title-header">Lagna Kundli (D1)</h2>
+                <select id="select-chart-type" class="glass-select font-outfit">
+                  <option value="lagna">Lagna (D1) Chart</option>
+                  <option value="chandra">Chandra (Moon) Chart</option>
+                  <option value="navamsha">Navamsha (D9) Chart</option>
+                </select>
+              </div>
+              <div class="chart-header-right">
+                <div class="toggle-group">
+                  <button class="toggle-btn active" id="btn-style-north">North</button>
+                  <button class="toggle-btn" id="btn-style-south">South</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="chart-display-container" id="chart-main-wrapper">
+              <!-- Rendered via Javascript SVG -->
+              <div id="kundli-svg-container" class="svg-container"></div>
+
+              <!-- Floating Connection Card (Hover / Click on Line or Node) -->
+              <div id="connection-floating-card" class="connection-floating-card hidden">
+                <div class="conn-card-header">
+                  <span class="conn-type-badge" id="conn-card-type">Graha Drishti</span>
+                  <button class="conn-card-close" id="btn-close-conn-card">&times;</button>
+                </div>
+                <h4 id="conn-card-title" class="conn-card-title">Saturn → House 10</h4>
+                <p id="conn-card-meaning" class="conn-card-meaning">Saturn casts full Graha Drishti onto House 10.</p>
+                <div class="conn-card-actions">
+                  <button class="btn-explain-conn" id="btn-explain-conn">Explain with AI Guru</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="chart-legend-bar font-outfit">
+              <div class="legend-item"><span class="legend-dot aspect-dot"></span><span>Drishti (Aspect)</span></div>
+              <div class="legend-item"><span class="legend-dot conj-dot"></span><span>Conjunction</span></div>
+              <div class="legend-item"><span class="legend-dot lord-dot"></span><span>Lordship</span></div>
+              <div class="legend-item" id="legend-transit-item" style="display:none;"><span class="legend-dot transit-dot"></span><span>Gochar (Transit)</span></div>
+            </div>
+
+            <!-- Life Area Lens Summary Card (shown when lens is active) -->
+            <div id="life-area-card" class="life-area-summary-card hidden">
+              <div class="life-card-header">
+                <div class="life-card-title-wrap">
+                  <span class="life-card-icon" id="life-card-icon">💼</span>
+                  <h3 id="life-card-title">Career & Profession</h3>
+                </div>
+                <span class="life-card-houses" id="life-card-houses-badge">Houses: 10, 2, 6, 11</span>
+              </div>
+              <p id="life-card-meaning" class="life-card-desc">Analyzing 10th house (Karma), 2nd (wealth), 6th (service), and 11th (gains).</p>
+              <div class="life-card-grid" id="life-card-grid"></div>
+              <div class="life-card-yogas" id="life-card-yogas"></div>
+            </div>
+
+            <div class="chart-disclaimer font-outfit">
+              <p>House 1 (Ascendant) starts at top-middle diamond (North) or marked box (South). Click any planet/house to inspect.</p>
+            </div>
+          </div>
+
+          <!-- Unified Inspect Panel (House + Planet Reusable Component) -->
+          <div class="glass-card unified-inspect-card" id="unified-inspect-panel">
+            <div class="inspect-header" id="inspect-header" style="display:none;">
+              <div class="inspect-title-group">
+                <span class="inspect-badge" id="inspect-badge">HOUSE 1</span>
+                <h2 id="inspect-title">Ascendant / Tanu Bhava</h2>
+              </div>
+              <button class="btn-close-inspect" id="btn-close-inspect" title="Reset Inspect View">&times;</button>
+            </div>
+
+            <div class="inspect-body" id="inspect-body" style="display:none;">
+              <!-- Dynamically populated for House or Planet mode -->
+            </div>
+
+            <!-- Default Cosmic Coordinates Table (shown when nothing inspected) -->
+            <div class="inspect-default-view" id="inspect-default-view">
+              <div class="card-header">
+                <h2>Cosmic Coordinates</h2>
+                <p>Planetary alignments at the exact moment of birth</p>
+              </div>
+              
+              <div class="scroll-table-wrapper">
+                <table class="astrology-table">
+                  <thead>
+                    <tr>
+                      <th>Planet</th>
+                      <th>Rashi (Sign)</th>
+                      <th>Nirayana Long.</th>
+                      <th>House</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planetary-coordinates-tbody">
+                    <!-- Generated via JS -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Natal Attributes Brief -->
+              <div class="natal-attributes-grid font-outfit">
+                <div class="attr-box">
+                  <span class="attr-label">Ascendant (Lagna)</span>
+                  <span class="attr-val" id="natal-lagna-val">Aries</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Moon Nakshatra</span>
+                  <span class="attr-val" id="natal-nakshatra-val">Ashwini</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Nakshatra Lord</span>
+                  <span class="attr-val" id="natal-lord-val">Ketu</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Moon Rashi</span>
+                  <span class="attr-val" id="natal-rashi-val">Mesha</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- SECTION: VIMSHOTTARI DASHA TIMELINE -->
+        <div class="glass-card dasha-section-card" id="dasha-timeline-section">
+          <div class="section-header-row">
+            <div>
+              <div class="section-eyebrow">Cosmic Chronology (120-Year Vimshottari)</div>
+              <h2>Interactive Dasha Timeline</h2>
+            </div>
+            <div class="dasha-active-badge" id="dasha-active-badge">
+              <span class="pulse-indicator"></span>
+              <span id="dasha-active-label">Mahadasha Timeline</span>
+            </div>
+          </div>
+          <p class="section-subtext">Click any Mahadasha, Antardasha, or Pratyantardasha to reveal planetary house placements, aspect chains, and highlight connected houses on your Kundli.</p>
+
+          <!-- Horizontal Timeline Container -->
+          <div class="dasha-timeline-container" id="dasha-timeline-container">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Active Selected Dasha Details Card -->
+          <div class="dasha-detail-card" id="dasha-detail-card">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- SECTION: AUTHENTIC YOGA FINDER -->
+        <div class="glass-card yoga-finder-card" id="yoga-finder-section">
+          <div class="section-header-row">
+            <div>
+              <div class="section-eyebrow">Planetary Yogas (Celestial Combinations)</div>
+              <h2>Yoga Finder</h2>
+            </div>
+            <div class="yoga-filter-pills" id="yoga-filter-pills">
+              <button class="filter-pill active" data-filter="all">All Yogas</button>
+              <button class="filter-pill" data-filter="Raj Yoga">Raj Yogas</button>
+              <button class="filter-pill" data-filter="Dhana Yoga">Dhana Yogas</button>
+              <button class="filter-pill" data-filter="Pancha Mahapurusha">Mahapurusha</button>
+              <button class="filter-pill" data-filter="Vipreet Raj">Vipreet Raj</button>
+            </div>
+          </div>
+          <p class="section-subtext">Vedic planetary configurations computed from your real planetary positions, lordships, and aspects. Click any yoga card to highlight its responsible planets and houses on the chart.</p>
+
+          <!-- Yoga Cards Grid -->
+          <div class="yoga-grid" id="yoga-grid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB: KUNDLI MILAN -->
+      <div id="tab-milan" class="tab-panel">
+        <div class="panel-layout col-milan">
+          
+          <!-- Matching Setup Card -->
+          <div class="glass-card milan-setup-card">
+            <div class="card-header">
+              <h2>Horoscope Compatibility Matching</h2>
+              <p>Calculate Ashtakoota score (36 Gunas) for prospective partners</p>
+            </div>
+
+            <form id="milan-form" class="milan-details-form">
+              <div class="partner-form-grid">
+                
+                <!-- Person 1 (Loaded from profile) -->
+                <div class="partner-block">
+                  <h3 class="partner-title p1-color">Partner A (Self)</h3>
+                  <div class="input-group">
+                    <label>Name</label>
+                    <input type="text" id="milan-p1-name" class="glass-input" readonly>
+                  </div>
+                  <div class="input-group">
+                    <label>Birth Date/Time</label>
+                    <input type="text" id="milan-p1-details" class="glass-input" readonly>
+                  </div>
+                </div>
+
+                <!-- Person 2 (Inputs) -->
+                <div class="partner-block">
+                  <h3 class="partner-title p2-color">Partner B</h3>
+                  <div class="input-group">
+                    <label for="milan-p2-name">Name</label>
+                    <input type="text" id="milan-p2-name" placeholder="E.g., Priya" required class="glass-input">
+                  </div>
+                  
+                  <div class="form-row">
+                    <div class="input-group">
+                      <label for="milan-p2-date">Date of Birth</label>
+                      <input type="date" id="milan-p2-date" required class="glass-input">
+                    </div>
+                    <div class="input-group">
+                      <label for="milan-p2-time">Time of Birth</label>
+                      <input type="time" id="milan-p2-time" required class="glass-input">
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="form-actions center">
+                <button type="submit" class="btn-gold font-outfit wide">
+                  <span>Match Horoscopes (Ashtakoota)</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Matching Result (Hidden until computed) -->
+          <div class="glass-card milan-result-card hidden" id="milan-result-panel">
+            <div class="result-score-banner">
+              <div class="score-circle-wrapper">
+                <div class="score-circle">
+                  <span class="secured-points" id="milan-score-val">22</span>
+                  <span class="max-points">/ 36</span>
+                </div>
+              </div>
+              <div class="score-text-summary">
+                <h3 id="milan-verdict-title">Very Good Match</h3>
+                <p id="milan-verdict-desc">Strongly recommended. High emotional and mental resonance.</p>
+              </div>
+            </div>
+
+            <!-- Guna Table Breakdown -->
+            <div class="guna-table-wrapper">
+              <table class="astrology-table guna-table">
+                <thead>
+                  <tr>
+                    <th>Koota (Parameter)</th>
+                    <th>Significance</th>
+                    <th>Max Points</th>
+                    <th>Points Secured</th>
+                    <th>Astrological Analysis</th>
+                  </tr>
+                </thead>
+                <tbody id="guna-tbody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Dual-Chart Synastry Visualizer (Guna Milan Context) -->
+            <div class="synastry-visualizer-section" id="synastry-visualizer-panel">
+              <div class="section-header-row">
+                <div>
+                  <div class="section-eyebrow">Matchmaking Synastry Layer</div>
+                  <h3>Dual Kundli Cross-Chart Aspects</h3>
+                </div>
+                <div class="synastry-view-toggle">
+                  <button type="button" class="toggle-btn active" id="btn-synastry-side">Side-by-Side</button>
+                  <button type="button" class="toggle-btn" id="btn-synastry-stack">Stacked</button>
+                </div>
+              </div>
+              <p class="section-subtext">Click any planet in Partner A to trace its aspects and conjunctions in Partner B's chart using cross-chart connector lines.</p>
+
+              <div class="synastry-charts-wrapper side-by-side" id="synastry-charts-container">
+                <div class="synastry-chart-box">
+                  <div class="synastry-chart-title p1-color" id="synastry-p1-title">Partner A (Self)</div>
+                  <div id="synastry-svg-chart-a" class="synastry-svg-container"></div>
+                </div>
+                <div class="synastry-chart-box">
+                  <div class="synastry-chart-title p2-color" id="synastry-p2-title">Partner B</div>
+                  <div id="synastry-svg-chart-b" class="synastry-svg-container"></div>
+                </div>
+              </div>
+
+              <div class="synastry-interaction-card" id="synastry-interaction-card">
+                <div id="synastry-interaction-text">Click any planet in either chart to reveal inter-chart planetary harmonic bonds.</div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: DAILY PANCHANG -->
+      <div id="tab-panchang" class="tab-panel">
+        <div class="panel-layout col-2">
+          
+          <!-- Panchang Attributes -->
+          <div class="glass-card panchang-attributes-card">
+            <div class="card-header">
+              <h2>Daily Astro-Weather</h2>
+              <p>Sidereal Panchang and alignment calculations for today</p>
+              <div class="panchang-date font-outfit" id="panchang-today-date">Wed, June 3, 2026</div>
+            </div>
+            
+            <div class="panchang-grid font-outfit">
+              <div class="panchang-item">
+                <div class="pan-title">Vara (Weekday)</div>
+                <div class="pan-val" id="pan-var-val">Wednesday</div>
+              </div>
+              <div class="panchang-item">
+                <div class="pan-title">Tithi (Lunar Phase)</div>
+                <div class="pan-val" id="pan-tithi-val">Ekadashi (Shukla)</div>
+              </div>
+              <div class="panchang-item">
+                <div class="pan-title">Nakshatra (Moon Star)</div>
+                <div class="pan-val" id="pan-nak-val">Chitra</div>
+              </div>
+              <div class="panchang-item">
+                <div class="pan-title">Yoga (Solar-Lunar Sum)</div>
+                <div class="pan-val" id="pan-yoga-val">Siddhi</div>
+              </div>
+              <div class="panchang-item">
+                <div class="pan-title">Karana (Half Tithi)</div>
+                <div class="pan-val" id="pan-karana-val">Bava</div>
+              </div>
+              <div class="panchang-item">
+                <div class="pan-title">Sun Position</div>
+                <div class="pan-val" id="pan-sun-val">Vrishabha (Taurus)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Muhurta Timings -->
+          <div class="glass-card muhurta-card">
+            <div class="card-header">
+              <h2>Daily Auspicious & Inauspicious Muhurtas</h2>
+              <p>Maximize alignment by scheduling actions in sync with the cosmos</p>
+            </div>
+            
+            <div class="muhurta-sections font-outfit">
+              <!-- Auspicious -->
+              <div class="muhurta-box auspicious">
+                <div class="m-header">
+                  <span class="m-dot"></span>
+                  <h4>Abhijit Muhurta (Auspicious Window)</h4>
+                </div>
+                <p class="m-time" id="pan-abhijit-time">11:40 AM - 12:30 PM</p>
+                <p class="m-desc">Highly favorable window for initiating new projects, business agreements, signing documents, or travel.</p>
+              </div>
+
+              <!-- Inauspicious -->
+              <div class="muhurta-box inauspicious">
+                <div class="m-header">
+                  <span class="m-dot"></span>
+                  <h4>Rahu Kaal (Inauspicious Window)</h4>
+                </div>
+                <p class="m-time" id="pan-rahu-time">12:00 PM - 13:30 PM</p>
+                <p class="m-desc">Astrological period dominated by Rahu. Avoid signing contracts, starting new jobs, marriages, or entering new homes during this time.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- TAB: CONSULT GURUS -->
+      <div id="tab-gurus" class="tab-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+          <div>
+            <h1 class="gradient-text font-display" style="font-size: 2rem; margin: 0 0 4px 0;">Astrology Consultations</h1>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin: 0;">Consult with verified traditional Jyotish Gurus & Astrologers</p>
+          </div>
+          <div class="glass-card font-outfit" style="padding: 10px 18px; display: flex; align-items: center; gap: 15px; border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.03);">
+            <div>
+              <span style="font-size: 0.72rem; color: var(--text-dark); display: block; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">Wallet Balance</span>
+              <strong style="color: var(--gold-light); font-size: 1.25rem;" class="font-outfit">₹<span id="guru-wallet-balance">100.00</span></strong>
+            </div>
+            <button class="btn-gold" id="btn-recharge-wallet-trigger" style="padding: 8px 14px; font-size: 0.82rem; border-radius: 8px;">Recharge</button>
+          </div>
+        </div>
+
+        <div class="panel-layout col-2" style="grid-template-columns: 1.8fr 1.2fr; gap: 24px; height: auto;">
+          <!-- Astrologers Directory -->
+          <div class="glass-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+              <h3 style="font-family: var(--font-display); font-size: 1.3rem; color: var(--gold-light); margin: 0;">Verified Experts</h3>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="toggle-btn active guru-filter-btn" data-specialty="all" style="padding: 6px 12px; font-size: 0.75rem;">All</button>
+                <button class="toggle-btn guru-filter-btn" data-specialty="Vedic" style="padding: 6px 12px; font-size: 0.75rem;">Vedic</button>
+                <button class="toggle-btn guru-filter-btn" data-specialty="Tarot" style="padding: 6px 12px; font-size: 0.75rem;">Tarot</button>
+                <button class="toggle-btn guru-filter-btn" data-specialty="Vastu" style="padding: 6px 12px; font-size: 0.75rem;">Vastu</button>
+                <button class="toggle-btn guru-filter-btn" data-specialty="Numerology" style="padding: 6px 12px; font-size: 0.75rem;">Numerology</button>
+              </div>
+            </div>
+            
+            <div id="astrologers-list" style="display: flex; flex-direction: column; gap: 16px;">
+              <!-- Populated via Javascript -->
+            </div>
+          </div>
+
+          <!-- Appointments List -->
+          <div class="glass-card" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+              <h3 style="font-family: var(--font-display); font-size: 1.2rem; color: var(--gold-light); margin: 0;">Scheduled Consults</h3>
+              <button class="btn-api-key" id="btn-book-guru-trigger" style="padding: 6px 12px; font-size: 0.8rem; border-radius: 8px;">Book Direct</button>
+            </div>
+            
+            <div id="bookings-list" style="display: flex; flex-direction: column; gap: 12px; max-height: 480px; overflow-y: auto; padding-right: 4px;">
+              <!-- Populated via Javascript -->
+            </div>
+          </div>
+        </div>
+      </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- MODAL: SETTINGS (Gemini API Key Setup) -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="glass-card modal-content animate-scale-up">
+      <div class="modal-header">
+        <h2>Gemini API Configuration</h2>
+        <button class="btn-close-modal" id="btn-close-settings">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>To enable real-time astrological consultations with **Acharya Aditya**, configure your personal **Gemini API Key**. The key is stored purely locally in your browser's memory and is never shared.</p>
+        
+        <div class="input-group">
+          <label for="gemini-api-key">Gemini API Key</label>
+          <input type="password" id="gemini-api-key" placeholder="Enter AIzaSy..." class="glass-input">
+          <p class="help-text">Don't have a key? You can get a free developer key from the <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</p>
+        </div>
+
+        <div class="modal-indicator font-outfit">
+          <span class="indicator-dot" id="api-status-dot"></span>
+          <span id="api-status-text">Simulated Intelligence (API key missing)</span>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-secondary font-outfit" id="btn-clear-api-key">Remove Key</button>
+        <button class="btn-gold font-outfit" id="btn-save-api-key">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUTHENTICATION (Sign In / Register) -->
+  <div class="modal-overlay" id="auth-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 420px;">
+      <!-- Sign In Panel -->
+      <div id="login-panel" class="auth-panel">
+        <div class="modal-header">
+          <h2>Sign In to Vedasync</h2>
+          <button class="btn-close-modal" id="btn-close-auth-login">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dark);">Sync your profile, birth charts, and cosmic consultations to our secure database.</p>
+          <form id="login-form">
+            <div class="input-group">
+              <label for="login-email">Email Address</label>
+              <input type="email" id="login-email" placeholder="you@example.com" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="login-password">Password</label>
+              <input type="password" id="login-password" placeholder="••••••••" required class="glass-input">
+            </div>
+            <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 10px; width: 100%;">
+              <span>Sign In</span>
+            </button>
+          </form>
+        </div>
+        <div class="modal-footer" style="justify-content: center; font-size: 0.9rem; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+          <span>Don't have an account? <a href="#" id="link-to-register" class="gold-text" style="text-decoration: none; font-weight: 500;">Register</a></span>
+        </div>
+      </div>
+
+      <!-- Register Panel (Hidden by default) -->
+      <div id="register-panel" class="auth-panel hidden">
+        <div class="modal-header">
+          <h2>Create Account</h2>
+          <button class="btn-close-modal" id="btn-close-auth-register">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p style="margin-bottom: 20px; font-size: 0.9rem; color: var(--text-dark);">Establish your celestial identity to persist chat and chart history.</p>
+          <form id="register-form">
+            <div class="input-group">
+              <label for="register-name">Full Name</label>
+              <input type="text" id="register-name" placeholder="Arjun Sharma" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="register-email">Email Address</label>
+              <input type="email" id="register-email" placeholder="you@example.com" required class="glass-input">
+            </div>
+            <div class="input-group">
+              <label for="register-password">Password</label>
+              <input type="password" id="register-password" placeholder="••••••••" required class="glass-input">
+            </div>
+            <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 10px; width: 100%;">
+              <span>Create Account</span>
+            </button>
+          </form>
+        </div>
+        <div class="modal-footer" style="justify-content: center; font-size: 0.9rem; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+          <span>Already registered? <a href="#" id="link-to-login" class="gold-text" style="text-decoration: none; font-weight: 500;">Sign In</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RECHARGE WALLET -->
+  <div class="modal-overlay" id="recharge-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Recharge Wallet</h2>
+        <button class="btn-close-modal" id="btn-close-recharge">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Recharge your wallet to initiate consultations with premium Gurujis. Money is safely added to your profile.</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; margin-bottom: 15px;">
+          <div class="glass-card package-card" data-amount="100" style="padding: 15px 10px; text-align: center; cursor: pointer; border-color: rgba(255,255,255,0.08); transition: var(--transition-bounce); background: rgba(255,255,255,0.02);">
+            <div style="font-size: 1.2rem; font-weight: bold; color: var(--gold-light);">₹100</div>
+            <div style="font-size: 0.7rem; color: var(--text-dark); margin-top: 4px;">Basic</div>
+          </div>
+          <div class="glass-card package-card featured" data-amount="200" style="padding: 15px 10px; text-align: center; cursor: pointer; border-color: var(--gold-primary); transition: var(--transition-bounce); background: rgba(245, 158, 11, 0.03);">
+            <div style="font-size: 1.2rem; font-weight: bold; color: var(--gold-light);">₹200</div>
+            <div style="font-size: 0.7rem; color: var(--gold-primary); margin-top: 4px;">Popular</div>
+          </div>
+          <div class="glass-card package-card" data-amount="500" style="padding: 15px 10px; text-align: center; cursor: pointer; border-color: rgba(255,255,255,0.08); transition: var(--transition-bounce); background: rgba(255,255,255,0.02);">
+            <div style="font-size: 1.2rem; font-weight: bold; color: var(--gold-light);">₹500</div>
+            <div style="font-size: 0.7rem; color: var(--text-dark); margin-top: 4px;">Premium</div>
+          </div>
+        </div>
+
+        <form id="recharge-form">
+          <div class="input-group">
+            <label for="recharge-custom-amount">Custom Amount (₹)</label>
+            <input type="number" id="recharge-custom-amount" min="10" max="10000" placeholder="Enter amount" required class="glass-input">
+          </div>
+          <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 15px; width: 100%;">
+            <span>Proceed to Recharge</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BOOK GURUJI -->
+  <div class="modal-overlay" id="booking-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2>Schedule 1-on-1 Consult</h2>
+        <button class="btn-close-modal" id="btn-close-booking">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Book a dedicated private session with Chief Astrologer (Guruji).</p>
+        <form id="booking-form">
+          <div class="input-group">
+            <label for="booking-guru-name">Select Astrologer</label>
+            <select id="booking-guru-name" class="glass-input" required style="width: 100%; box-sizing: border-box; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--input-border); border-radius: 10px; padding: 12px;">
+              <option value="Acharya Vashishta">Acharya Vashishta (Vedic Specialist - ₹15/min)</option>
+              <option value="Yogini Maitreyi">Yogini Maitreyi (Tarot Specialist - ₹15/min)</option>
+              <option value="Dr. Radhakrishnan">Dr. Radhakrishnan (Numerology Expert - ₹12/min)</option>
+              <option value="Guru Kripacharya">Guru Kripacharya (Vastu & KP System - ₹20/min)</option>
+              <option value="Aura Shruti">Aura Shruti (Palmistry Consultant - ₹15/min)</option>
+            </select>
+          </div>
+          <div class="form-row" style="margin-top: 10px; display: flex; gap: 12px;">
+            <div class="input-group" style="flex: 1;">
+              <label for="booking-date">Select Date</label>
+              <input type="date" id="booking-date" required class="glass-input" style="width: 100%;">
+            </div>
+            <div class="input-group" style="flex: 1;">
+              <label for="booking-time">Select Time Slot</label>
+              <select id="booking-time" class="glass-input" required style="width: 100%; box-sizing: border-box; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--input-border); border-radius: 10px; padding: 12px;">
+                <option value="09:00 AM - 10:00 AM">09:00 AM - 10:00 AM</option>
+                <option value="11:30 AM - 12:30 PM">11:30 AM - 12:30 PM</option>
+                <option value="03:00 PM - 04:00 PM">03:00 PM - 04:00 PM</option>
+                <option value="06:30 PM - 07:30 PM">06:30 PM - 07:30 PM</option>
+              </select>
+            </div>
+          </div>
+          <div class="input-group" style="margin-top: 10px;">
+            <label for="booking-mode">Consultation Mode</label>
+            <select id="booking-mode" class="glass-input" required style="width: 100%; box-sizing: border-box; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--input-border); border-radius: 10px; padding: 12px;">
+              <option value="Chat">Chat Session</option>
+              <option value="Voice Call">Voice Call Session</option>
+              <option value="Video Call">Video Call Session</option>
+            </select>
+          </div>
+          <div class="input-group" style="margin-top: 10px;">
+            <label for="booking-query">Your Question / Concern</label>
+            <input type="text" id="booking-query" placeholder="E.g., Career growth and financial stability in late 2026" required class="glass-input">
+          </div>
+          <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 15px; width: 100%;">
+            <span>Schedule Appointment</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: HOROSCOPE DETAIL -->
+  <div class="modal-overlay" id="horoscope-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2 id="horoscope-title">♈ Aries Horoscope</h2>
+        <button class="btn-close-modal" id="btn-close-horoscope">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 15px;">
+        <span class="panchang-date font-outfit" id="horoscope-date" style="align-self: flex-start;">Today's predictions</span>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 5px;">
+          <div class="glass-card" style="padding: 12px; background: rgba(139,92,246,0.03); border-color: rgba(139,92,246,0.1);">
+            <strong style="color: var(--accent-purple); display: block; margin-bottom: 4px; font-size: 0.9rem;">💼 Career & Finance</strong>
+            <p id="horoscope-career" style="font-size: 0.88rem; line-height: 1.4; color: var(--text-secondary); margin: 0;"></p>
+          </div>
+          <div class="glass-card" style="padding: 12px; background: rgba(245,158,11,0.03); border-color: rgba(245,158,11,0.15);">
+            <strong style="color: var(--gold-light); display: block; margin-bottom: 4px; font-size: 0.9rem;">💖 Love & Relationships</strong>
+            <p id="horoscope-love" style="font-size: 0.88rem; line-height: 1.4; color: var(--text-secondary); margin: 0;"></p>
+          </div>
+          <div class="glass-card" style="padding: 12px; background: rgba(16,185,129,0.03); border-color: rgba(16,185,129,0.15);">
+            <strong style="color: var(--accent-green); display: block; margin-bottom: 4px; font-size: 0.9rem;">🌿 Health & Well-being</strong>
+            <p id="horoscope-health" style="font-size: 0.88rem; line-height: 1.4; color: var(--text-secondary); margin: 0;"></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ASTROLOGER PROFILE -->
+  <div class="modal-overlay" id="astrologer-profile-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 480px;">
+      <div class="modal-header">
+        <h2>Expert Astrologer Profile</h2>
+        <button class="btn-close-modal" id="btn-close-astrologer-profile">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 15px; text-align: left;">
+        <div style="display: flex; align-items: center; gap: 16px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 15px;">
+          <div class="user-avatar" id="astrologer-profile-avatar" style="width: 60px; height: 60px; font-size: 1.6rem; background: rgba(245, 158, 11, 0.08); border: 1.5px solid var(--gold-primary); color: var(--gold-light); font-weight: bold; position: relative; display: flex; align-items: center; justify-content: center;">
+            A
+          </div>
+          <div>
+            <h3 id="astrologer-profile-name" style="font-family: var(--font-display); color: var(--gold-light); font-size: 1.4rem; margin: 0;">Pandit Vashishta</h3>
+            <span id="astrologer-profile-specialty" style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-top: 2px;">Vedic Astrology • 18 yrs Experience</span>
+            <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center;">
+              <span class="status-dot online" id="astrologer-profile-status-dot" style="position: static; display: inline-block;"></span>
+              <span id="astrologer-profile-status-text" style="font-size: 0.75rem; color: var(--accent-green); font-weight: 500;">Online Now</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Detailed Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0;">
+          <div class="glass-card" style="padding: 12px 6px; text-align: center; border-color: rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+            <strong style="font-size: 1.15rem; color: var(--gold-light); display: block;" id="astrologer-profile-readings">12,400+</strong>
+            <span style="font-size: 0.68rem; color: var(--text-secondary);">Total Readings</span>
+          </div>
+          <div class="glass-card" style="padding: 12px 6px; text-align: center; border-color: rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+            <strong style="font-size: 1.15rem; color: var(--gold-light); display: block;" id="astrologer-profile-response">12s</strong>
+            <span style="font-size: 0.68rem; color: var(--text-secondary);">Avg Response</span>
+          </div>
+          <div class="glass-card" style="padding: 12px 6px; text-align: center; border-color: rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+            <strong style="font-size: 1.15rem; color: var(--gold-light); display: block;" id="astrologer-profile-repeat">42%</strong>
+            <span style="font-size: 0.68rem; color: var(--text-secondary);">Repeat Clients</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-family: var(--font-outfit);">
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">Languages:</span>
+          <strong id="astrologer-profile-languages" style="font-size: 0.88rem; color: var(--text-primary);">English, Hindi</strong>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-family: var(--font-outfit);">
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">Consultation Rate:</span>
+          <strong id="astrologer-profile-rate" style="font-size: 0.95rem; color: var(--gold-light);" class="font-outfit">₹15/minute</strong>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong style="font-size: 0.9rem; color: var(--text-primary); display: block; margin-bottom: 5px;">About Astrologer:</strong>
+          <p id="astrologer-profile-bio" style="font-size: 0.85rem; line-height: 1.45; color: var(--text-secondary); margin: 0;"></p>
+        </div>
+
+        <div style="margin-top: 10px;">
+          <strong style="font-size: 0.9rem; color: var(--text-primary); display: block; margin-bottom: 5px;">Top User Review:</strong>
+          <div class="glass-card" style="padding: 10px 14px; border-color: rgba(255,255,255,0.05); background: rgba(255,255,255,0.01);">
+            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--gold-light); margin-bottom: 4px;">
+              <span>★ 5.0 by Seeker S.</span>
+              <span style="color: var(--text-dark);">Yesterday</span>
+            </div>
+            <p id="astrologer-profile-review" style="font-size: 0.82rem; font-style: italic; color: var(--text-secondary); line-height: 1.4; margin: 0;"></p>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; margin-top: 20px; width: 100%;">
+          <button class="btn-gold font-outfit" id="btn-profile-chat-now" style="flex: 1; padding: 14px;">
+            <span>Chat Now</span>
+          </button>
+          <button class="btn-secondary font-outfit" id="btn-profile-call-now" style="flex: 1; padding: 14px; border-color: rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);">
+            <span>Call Now</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SUBSCRIPTION CHECKOUT -->
+  <div class="modal-overlay" id="subscription-checkout-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 420px; text-align: center;">
+      <div class="modal-header">
+        <h2>Upgrade to Jyotishi Premium</h2>
+        <button class="btn-close-modal" id="btn-close-checkout">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 15px; text-align: left;">
+        <div class="glass-card" style="padding: 15px; background: rgba(245, 158, 11, 0.04); border-color: var(--gold-primary); display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <div>
+            <strong style="color: var(--gold-light); display: block; font-size: 1.1rem;">Jyotishi Premium</strong>
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">Unlimited AI Consultations & Advanced Charts</span>
+          </div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-primary);" class="font-outfit">₹149<span style="font-size: 0.8rem; font-weight: normal; color: var(--text-secondary);">/mo</span></div>
+        </div>
+
+        <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+          <button class="toggle-btn active" id="btn-checkout-upi" style="flex: 1; padding: 10px; font-size: 0.85rem;">UPI / QR Code</button>
+          <button class="toggle-btn" id="btn-checkout-card" style="flex: 1; padding: 10px; font-size: 0.85rem;">Credit/Debit Card</button>
+        </div>
+
+        <!-- UPI CHECKOUT PANEL -->
+        <div id="checkout-upi-panel" style="text-align: center;">
+          <div style="margin: 15px auto; width: 160px; height: 160px; background: white; border-radius: 10px; padding: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(255,255,255,0.05);">
+            <!-- Mock QR Code SVG -->
+            <svg width="140" height="140" viewBox="0 0 100 100">
+              <!-- Outer frame -->
+              <rect x="0" y="0" width="25" height="25" fill="#000"/>
+              <rect x="2" y="2" width="21" height="21" fill="#FFF"/>
+              <rect x="6" y="6" width="13" height="13" fill="#000"/>
+              
+              <rect x="75" y="0" width="25" height="25" fill="#000"/>
+              <rect x="77" y="2" width="21" height="21" fill="#FFF"/>
+              <rect x="81" y="6" width="13" height="13" fill="#000"/>
+              
+              <rect x="0" y="75" width="25" height="25" fill="#000"/>
+              <rect x="2" y="77" width="21" height="21" fill="#FFF"/>
+              <rect x="6" y="81" width="13" height="13" fill="#000"/>
+              
+              <!-- Random QR Pixels -->
+              <rect x="35" y="5" width="10" height="10" fill="#000"/>
+              <rect x="55" y="10" width="15" height="5" fill="#000"/>
+              <rect x="40" y="25" width="5" height="15" fill="#000"/>
+              <rect x="15" y="35" width="15" height="10" fill="#000"/>
+              <rect x="80" y="35" width="10" height="15" fill="#000"/>
+              <rect x="45" y="45" width="20" height="10" fill="#000"/>
+              <rect x="35" y="60" width="10" height="20" fill="#000"/>
+              <rect x="65" y="65" width="20" height="10" fill="#000"/>
+              <rect x="55" y="80" width="15" height="15" fill="#000"/>
+              <!-- Center Logo placeholder -->
+              <rect x="42" y="42" width="16" height="16" fill="#FFF"/>
+              <polygon points="50,42 54,47 58,47 53,50 55,55 50,52 45,55 47,50 42,47 46,47" fill="#F59E0B"/>
+            </svg>
+          </div>
+          <p style="font-size: 0.82rem; color: var(--text-secondary); text-align: center; margin-bottom: 20px;">Scan this QR code using any UPI app (GPay, PhonePe, Paytm, BHIM) to proceed with payment.</p>
+          <button type="button" class="btn-gold font-outfit wide" id="btn-simulate-upi-success" style="width: 100%;">
+            <span>Simulate Payment Success</span>
+          </button>
+        </div>
+
+        <!-- CARD CHECKOUT PANEL (Hidden by default) -->
+        <div id="checkout-card-panel" class="hidden">
+          <form id="checkout-card-form" class="details-form">
+            <div class="input-group">
+              <label for="card-holder">Cardholder Name</label>
+              <input type="text" id="card-holder" placeholder="E.g., Arjun Sharma" required class="glass-input">
+            </div>
+            <div class="input-group" style="margin-top: 10px;">
+              <label for="card-number">Card Number</label>
+              <input type="text" id="card-number" placeholder="4111 2222 3333 4444" maxlength="19" required class="glass-input">
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+              <div class="input-group">
+                <label for="card-expiry">Expiry Date</label>
+                <input type="text" id="card-expiry" placeholder="MM/YY" maxlength="5" required class="glass-input">
+              </div>
+              <div class="input-group">
+                <label for="card-cvv">CVV</label>
+                <input type="password" id="card-cvv" placeholder="•••" maxlength="3" required class="glass-input">
+              </div>
+            </div>
+            <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 20px; width: 100%;">
+              <span>Pay & Subscribe (₹149)</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CAREERS AT VEDASYNC -->
+  <div class="modal-overlay" id="careers-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 450px;">
+      <div class="modal-header">
+        <h2>Join Vedasync Team</h2>
+        <button class="btn-close-modal" id="btn-close-careers">&times;</button>
+      </div>
+      <div class="modal-body" style="text-align: left;">
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.4;">Establish your professional connection with Vedasync. We recruit expert Vedic astrologers, software developers, and spiritual guides. Submit your application below.</p>
+        
+        <form id="careers-form" class="details-form">
+          <div class="input-group">
+            <label for="careers-name">Full Name</label>
+            <input type="text" id="careers-name" placeholder="Your Name" required class="glass-input">
+          </div>
+          <div class="input-group" style="margin-top: 12px;">
+            <label for="careers-email">Email Address</label>
+            <input type="email" id="careers-email" placeholder="you@example.com" required class="glass-input">
+          </div>
+          <div class="form-row" style="margin-top: 12px; display: flex; gap: 12px;">
+            <div class="input-group" style="flex: 1;">
+              <label for="careers-role">Role of Interest</label>
+              <select id="careers-role" class="glass-input" required style="width: 100%; box-sizing: border-box; background: var(--input-bg); color: var(--text-primary); border: 1px solid var(--input-border); border-radius: 10px; padding: 12px;">
+                <option value="Astrologer">Expert Astrologer</option>
+                <option value="Software Developer">Software Developer</option>
+                <option value="SEO Specialist">SEO Specialist</option>
+                <option value="Content Creator">Content Creator</option>
+              </select>
+            </div>
+            <div class="input-group" style="flex: 1;">
+              <label for="careers-experience">Experience (Years)</label>
+              <input type="number" id="careers-experience" min="0" max="50" placeholder="E.g., 5" required class="glass-input" style="width: 100%;">
+            </div>
+          </div>
+          <div class="input-group" style="margin-top: 12px;">
+            <label for="careers-bio">Brief Biography & Credentials</label>
+            <textarea id="careers-bio" placeholder="Tell us about your qualifications, achievements, and why you want to join us..." rows="4" required class="glass-input" style="resize: vertical; width: 100%; box-sizing: border-box;"></textarea>
+          </div>
+          <button type="submit" class="btn-gold font-outfit wide" style="margin-top: 20px; width: 100%;">
+            <span>Submit Application</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ABOUT VEDASYNC -->
+  <div class="modal-overlay" id="about-modal">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 460px; text-align: left;">
+      <div class="modal-header">
+        <h2>About Vedasync</h2>
+        <button class="btn-close-modal" id="btn-close-about">&times;</button>
+      </div>
+      <div class="modal-body" style="gap: 15px; line-height: 1.5; font-size: 0.9rem; color: var(--text-secondary);">
+        <p><strong>Vedasync</strong> is a premium, next-generation AI-powered Vedic astrology application designed to bring the deep mathematical and spiritual wisdom of ancient Jyotish shastras directly to your screen.</p>
+        
+        <div class="glass-card" style="padding: 15px; border-color: rgba(245, 158, 11, 0.2); background: rgba(245, 158, 11, 0.02); margin-top: 5px; margin-bottom: 5px;">
+          <h4 style="color: var(--gold-light); margin-bottom: 6px; font-family: var(--font-display);">Strict Vetting Process</h4>
+          <p style="font-size: 0.85rem; margin: 0;">We take quality extremely seriously. Less than <strong>8%</strong> of applicants clear our rigorous selection process. Every onboarding includes deep qualification validation, dual-stage case study testing, video interviews, and a 30-day live customer trial period.</p>
+        </div>
+
+        <p>Our goal is to combine local high-performance astronomical cycle equations (relative to Epoch J2000 under Lahiri Ayanamsha rules) with advanced large language model configurations (powered by Google Gemini) to deliver practical, encouraging, and accurate spiritual counseling.</p>
+        
+        <p style="font-size: 0.78rem; text-align: center; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px; margin: 0; color: var(--text-dark);">© 2026 Vedasync. Built for spiritual research and life path guidance.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: SIMULATED VOICE CALL -->
+  <div class="modal-overlay" id="sim-call-overlay" style="z-index: 200; background: rgba(6, 6, 12, 0.95);">
+    <div class="glass-card modal-content animate-scale-up" style="max-width: 350px; text-align: center; border-color: var(--gold-primary); background: #06060c;">
+      <div style="margin-top: 20px;">
+        <div class="avatar-glow" style="margin: 0 auto 20px; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center;">
+          <svg class="astrologer-avatar" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+            <circle cx="50" cy="50" r="48" fill="#1E1B4B" stroke="#F59E0B" stroke-width="2"/>
+            <polygon points="50,15 62,40 85,50 62,60 50,85 38,60 15,50 38,40" fill="#F59E0B"/>
+          </svg>
+        </div>
+        <h2 id="sim-call-name" style="font-family: var(--font-display); color: var(--gold-light); margin: 0;">Acharya Shastri</h2>
+        <span id="sim-call-status" style="color: var(--text-secondary); font-size: 0.9rem; display: block; margin-top: 5px;">Connecting...</span>
+        <strong id="sim-call-timer" class="font-outfit" style="display: block; margin-top: 20px; font-size: 1.8rem; color: var(--text-primary);">00:00</strong>
+        
+        <div style="margin-top: 40px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+          <span style="font-size: 0.72rem; color: var(--text-dark);">Session rate: ₹<span id="sim-call-rate">15</span>/min. Charging balance.</span>
+          <button class="btn-mic" id="btn-end-sim-call" style="background: rgba(239, 68, 68, 0.2); border-color: var(--accent-red); color: var(--accent-red); width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: 10px; cursor: pointer; transition: 0.2s;" title="Disconnect Call">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 24px; height: 24px; transform: rotate(135deg);">
+              <path d="M12 2c-5.52 0-10 4.48-10 10s4.48 10 10 10 10-4.48 10-10-4.48-10-10-10zm4 11h-8v-2h8v2z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: SIMULATED CHAT CONSULT -->
+  <div class="modal-overlay" id="sim-chat-overlay" style="z-index: 200;">
+    <div class="glass-card modal-content animate-scale-up" style="width: 90%; max-width: 500px; height: 80vh; padding: 0; display: flex; flex-direction: column; background: #06060c; border-color: var(--gold-primary);">
+      <div class="chat-header" style="border-radius: 15px 15px 0 0; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="avatar-glow" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+            <svg class="astrologer-avatar" viewBox="0 0 100 100" style="width: 100%; height: 100%;">
+              <circle cx="50" cy="50" r="48" fill="#1E1B4B" stroke="#F59E0B" stroke-width="2"/>
+              <polygon points="50,15 62,40 85,50 62,60 50,85 38,60 15,50 38,40" fill="#F59E0B"/>
+            </svg>
+          </div>
+          <div style="text-align: left;">
+            <h3 id="sim-chat-name" style="margin: 0; font-size: 1.1rem; color: var(--gold-light);">Acharya Shastri</h3>
+            <span style="font-size: 0.72rem; color: var(--accent-green); display: block; margin-top: 2px;">Live Consultation • <span id="sim-chat-timer">00:00</span></span>
+          </div>
+        </div>
+        <button class="btn-close-modal" id="btn-close-sim-chat" style="font-size: 1.8rem; line-height: 1;">&times;</button>
+      </div>
+      
+      <div id="sim-chat-messages" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.2);">
+        <!-- Dynamic chat bubbles -->
+      </div>
+      
+      <div class="chat-input-bar" style="border-radius: 0 0 15px 15px; padding: 15px; border-top: 1px solid rgba(255,255,255,0.06); background: #06060c;">
+        <form id="sim-chat-form" class="chat-form" style="width: 100%; display: flex; gap: 10px;">
+          <input type="text" id="sim-chat-input" placeholder="Consult Guruji on career, love, finance..." autocomplete="off" required class="glass-input" style="flex: 1;">
+          <button type="submit" class="btn-send-gold" id="btn-send-sim-chat">
+            <svg class="icon" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SHAREABLE SNAPSHOT -->
+  <div class="modal-overlay" id="snapshot-modal">
+    <div class="glass-card modal-content animate-scale-up snapshot-modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">📸</span>
+          <h2>Kundli Snapshot Card</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-snapshot">&times;</button>
+      </div>
+      <p class="modal-subtext">Share your planetary alignments and highlighted connections card with your network or astrologer.</p>
+
+      <div class="snapshot-preview-area">
+        <canvas id="snapshot-canvas" class="snapshot-canvas"></canvas>
+      </div>
+
+      <div class="snapshot-actions-row">
+        <button type="button" class="btn-gold font-outfit" id="btn-download-snapshot">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span>Download PNG</span>
+        </button>
+        <button type="button" class="btn-api-key" id="btn-copy-snapshot">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          <span>Copy Image / Share Link</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TRADITIONAL VEDIC REMEDIES -->
+  <div class="modal-overlay" id="remedies-modal">
+    <div class="glass-card modal-content animate-scale-up remedies-modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">🕉️</span>
+          <h2 id="remedies-modal-title">Traditional Astrological Remedies</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-remedies">&times;</button>
+      </div>
+      <p class="modal-subtext" id="remedies-modal-subtitle">Time-honored classical practices for planetary balance and energetic harmony.</p>
+
+      <div class="remedies-body" id="remedies-body">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="remedies-disclaimer-box font-outfit">
+        <strong>Cultural & Educational Notice:</strong> Astrological remedies are presented solely for spiritual reflection and traditional heritage. They are non-prescriptive and should not substitute medical, financial, or legal counsel.
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GROUNDED AI CONNECTION EXPLANATION -->
+  <div class="modal-overlay" id="connection-explain-modal">
+    <div class="glass-card modal-content animate-scale-up conn-explain-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">🔮</span>
+          <h2 id="explain-modal-title">Connection Deep-Dive</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-explain">&times;</button>
+      </div>
+      
+      <div class="explain-modal-body">
+        <div class="explain-summary-card">
+          <span class="conn-type-badge" id="explain-type-badge">Graha Drishti</span>
+          <h3 id="explain-title-text">Saturn → House 10 (10th Aspect)</h3>
+          <p id="explain-source-meaning" class="explain-source-meaning">Calculated from natal planetary positions and classical Parashari principles.</p>
+        </div>
+
+        <div class="explain-ai-box">
+          <div class="explain-ai-header">
+            <span class="ai-sparkle">✨</span>
+            <h4>Astrosage-Grade Deep Vedic Analysis</h4>
+          </div>
+          <div class="explain-ai-text" id="explain-ai-text">
+            <div class="loading-spinner"></div> Synthesizing astrological house lordship, nakshatra, and aspect alignments...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Wrapper -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Application Script files -->
+  <script src="astrology-engine.js"></script>
+  <script src="gemini-api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
