@@ -27,6 +27,16 @@ const state = {
   computedConnections: null
 };
 
+// Global safe event binding helper to prevent crashes if elements are out of sync/cached
+function safeBind(el, event, callback) {
+  if (!el) return;
+  if (el instanceof NodeList || Array.isArray(el)) {
+    el.forEach(item => { if (item) item.addEventListener(event, callback); });
+  } else {
+    el.addEventListener(event, callback);
+  }
+}
+
 // DOM Elements
 const els = {
   starfield: document.getElementById("starfield"),
@@ -116,6 +126,8 @@ const els = {
 
   // Synastry Mode Elements
   synastryVisualizerPanel: document.getElementById("synastry-visualizer-panel"),
+  synastryP1Title: document.getElementById("synastry-p1-title"),
+  synastryP2Title: document.getElementById("synastry-p2-title"),
   btnSynastrySide: document.getElementById("btn-synastry-side"),
   btnSynastryStack: document.getElementById("btn-synastry-stack"),
   synastryChartsContainer: document.getElementById("synastry-charts-container"),
@@ -717,16 +729,18 @@ function initializeUserProfile(name, dob, tob, pob) {
     state.userProfile = profile;
 
     // Save profile to local storage for quick reloading
-    localStorage.setItem("vedasync_last_profile", JSON.stringify({ name, dob, tob, pob }));
+    try {
+      localStorage.setItem("vedasync_last_profile", JSON.stringify({ name, dob, tob, pob }));
+    } catch(e) {}
 
     // Sync profile to database if user is logged in
     if (state.currentUser) {
       saveProfileToDatabase(name, dob, tob, pob);
     }
 
-    // Update UI elements with profile details
-    els.displayUserName.textContent = profile.name;
-    els.userInitial.textContent = profile.name.charAt(0).toUpperCase();
+    // Update UI elements with profile details safely
+    if (els.displayUserName) els.displayUserName.textContent = profile.name;
+    if (els.userInitial) els.userInitial.textContent = (profile.name || "A").charAt(0).toUpperCase();
     
     // Format birth details string
     const dateFormatted = new Date(profile.dob).toLocaleDateString(undefined, {
@@ -734,21 +748,33 @@ function initializeUserProfile(name, dob, tob, pob) {
       month: "short",
       year: "numeric"
     });
-    els.displayUserBirth.textContent = `${dateFormatted} • ${profile.tob}`;
+    if (els.displayUserBirth) els.displayUserBirth.textContent = `${dateFormatted} • ${profile.tob}`;
 
     // Update compatibility form (Self)
-    els.milanP1Name.value = profile.name;
-    els.milanP1Details.value = `${dateFormatted} (${profile.tob})`;
+    if (els.milanP1Name) els.milanP1Name.value = profile.name;
+    if (els.milanP1Details) els.milanP1Details.value = `${dateFormatted} (${profile.tob})`;
 
-    // Transition panels
-    els.landingPage.classList.remove("active");
-    els.appInterface.classList.remove("hidden");
+    // Transition panels: hide landing page, show app interface
+    const landing = document.getElementById("landing-page");
+    const app = document.getElementById("app-interface");
+    if (landing) {
+      landing.classList.remove("active");
+      landing.style.display = "none";
+    }
+    if (app) {
+      app.classList.remove("hidden");
+      app.style.display = "flex";
+    }
 
     // Load user dashboard modules
     loadDashboardModules();
+    
+    // Switch directly to Lagna Kundli view
+    switchTab("tab-chart");
+    
     showToast(`Welcome ${profile.name}. Your natal coordinates have been cast.`, "success");
   } catch (err) {
-    console.error(err);
+    console.error("Error casting birth coordinates:", err);
     showToast("Error casting birth coordinates. Check input values.", "error");
   }
 }
@@ -2034,8 +2060,10 @@ function renderSynastryVisualizer(profileA, profileB) {
   if (!panel || !containerA || !containerB) return;
 
   panel.style.display = "block";
-  els.synastryP1Title.textContent = `${profileA.name} (Self)`;
-  els.synastryP2Title.textContent = `${profileB.name}`;
+  const p1Title = els.synastryP1Title || document.getElementById("synastry-p1-title");
+  const p2Title = els.synastryP2Title || document.getElementById("synastry-p2-title");
+  if (p1Title) p1Title.textContent = `${profileA.name} (Self)`;
+  if (p2Title) p2Title.textContent = `${profileB.name}`;
 
   // Render miniature North Indian charts for both partners
   renderMiniChart(containerA, profileA, "A");

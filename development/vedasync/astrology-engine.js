@@ -139,12 +139,31 @@ function calculatePlanetaryPositions(date, timeOffsetHrs) {
 }
 
 /**
+ * Safely parses any time string (24h, 12h AM/PM, etc.) to decimal hours (0.0 - 24.0)
+ */
+function parseTimeToDecimal(timeString) {
+  if (!timeString && timeString !== 0) return 12.0;
+  if (typeof timeString === "number") return timeString;
+  const str = String(timeString).trim();
+  const isPM = /pm/i.test(str);
+  const isAM = /am/i.test(str);
+  const clean = str.replace(/[^\d:]/g, "");
+  const parts = clean.split(":").map(p => parseInt(p, 10) || 0);
+  let hrs = parts[0] !== undefined ? parts[0] : 12;
+  const mins = parts[1] !== undefined ? parts[1] : 0;
+
+  if (isPM && hrs < 12) hrs += 12;
+  if (isAM && hrs === 12) hrs = 0;
+
+  return hrs + (mins / 60);
+}
+
+/**
  * Computes Ascendant (Lagna) based on sun position and birth time
  * Lagna moves 15 degrees per hour starting from Sun's longitude at Sunrise (approx 6:00 AM local)
  */
 function calculateLagna(sunLongitude, timeString) {
-  const [hours, minutes] = timeString.split(":").map(Number);
-  const birthTimeDecimal = hours + minutes / 60;
+  const birthTimeDecimal = parseTimeToDecimal(timeString);
   // Assumes sunrise at 06:00
   let diffHours = birthTimeDecimal - 6.0;
   if (diffHours < 0) diffHours += 24;
@@ -168,9 +187,6 @@ function getNakshatraIndex(longitude) {
 }
 
 /**
- * Calculates complete birth details
- */
-/**
  * Calculates Navamsha (D9) Sign Index (0-11) for a given sidereal longitude
  */
 function getNavamshaRashiIndex(longitude) {
@@ -192,10 +208,13 @@ function getNavamshaRashiIndex(longitude) {
  * Calculates complete birth details
  */
 function getBirthProfile(name, dobString, tobString, pobString) {
-  const birthDate = new Date(dobString);
-  const [hrs, mins] = tobString.split(":").map(Number);
+  let birthDate = new Date(dobString);
+  if (isNaN(birthDate.getTime())) {
+    birthDate = new Date();
+  }
+  const decimalHours = parseTimeToDecimal(tobString);
   
-  const planets = calculatePlanetaryPositions(birthDate, hrs + mins/60);
+  const planets = calculatePlanetaryPositions(birthDate, decimalHours);
   const lagnaDegrees = calculateLagna(planets["Sun"], tobString);
 
   const moonLong = planets["Moon"];
