@@ -11,7 +11,20 @@ const state = {
   chartType: "lagna",  // "lagna", "chandra", or "navamsha"
   chatHistory: [],
   selectedPartnerProfile: null,
-  currentUser: null // Stores { id, name, email } when logged in
+  currentUser: null, // Stores { id, name, email } when logged in
+
+  // Advanced Astrosage-grade state:
+  showConnections: true,
+  exploreMode: false,
+  showTransits: false,
+  transitDate: null,
+  activeLens: "all",
+  selectedEntity: null, // { type: 'house' | 'planet', id: string, houseNum: number }
+  activeConnection: null,
+  activeDashaPeriod: null,
+  yogaFilter: "all",
+  synastryView: "side",
+  computedConnections: null
 };
 
 // DOM Elements
@@ -39,7 +52,7 @@ const els = {
   quickChips: document.querySelectorAll(".chip-btn"),
   btnMicInput: document.getElementById("btn-mic-input"),
 
-  // Chart Elements
+  // Chart Elements & Advanced Toolbar
   chartStyleNorth: document.getElementById("btn-style-north"),
   chartStyleSouth: document.getElementById("btn-style-south"),
   kundliSvgContainer: document.getElementById("kundli-svg-container"),
@@ -51,6 +64,85 @@ const els = {
   selectChartType: document.getElementById("select-chart-type"),
   btnPrintReport: document.getElementById("btn-print-report"),
   chartTitleHeader: document.getElementById("chart-title-header"),
+
+  // Advanced Visualizer Toolbar Elements
+  btnExploreMode: document.getElementById("btn-explore-mode"),
+  toggleConnections: document.getElementById("toggle-connections"),
+  toggleTransits: document.getElementById("toggle-transits"),
+  transitDateContainer: document.getElementById("transit-date-container"),
+  transitDatePicker: document.getElementById("transit-date-picker"),
+  btnClearHighlights: document.getElementById("btn-clear-highlights"),
+  btnShareChart: document.getElementById("btn-share-chart"),
+  lensPills: document.querySelectorAll(".lens-pill"),
+  exploreStatusBanner: document.getElementById("explore-status-banner"),
+  exploreBannerText: document.getElementById("explore-banner-text"),
+  legendTransitItem: document.getElementById("legend-transit-item"),
+
+  // Connection Floating Card
+  connectionFloatingCard: document.getElementById("connection-floating-card"),
+  connCardType: document.getElementById("conn-card-type"),
+  connCardTitle: document.getElementById("conn-card-title"),
+  connCardMeaning: document.getElementById("conn-card-meaning"),
+  btnCloseConnCard: document.getElementById("btn-close-conn-card"),
+  btnExplainConn: document.getElementById("btn-explain-conn"),
+
+  // Life Area Lens Summary
+  lifeAreaCard: document.getElementById("life-area-card"),
+  lifeCardIcon: document.getElementById("life-card-icon"),
+  lifeCardTitle: document.getElementById("life-card-title"),
+  lifeCardHousesBadge: document.getElementById("life-card-houses-badge"),
+  lifeCardMeaning: document.getElementById("life-card-meaning"),
+  lifeCardGrid: document.getElementById("life-card-grid"),
+  lifeCardYogas: document.getElementById("life-card-yogas"),
+
+  // Unified Inspect Panel
+  unifiedInspectPanel: document.getElementById("unified-inspect-panel"),
+  inspectHeader: document.getElementById("inspect-header"),
+  inspectBadge: document.getElementById("inspect-badge"),
+  inspectTitle: document.getElementById("inspect-title"),
+  btnCloseInspect: document.getElementById("btn-close-inspect"),
+  inspectBody: document.getElementById("inspect-body"),
+  inspectDefaultView: document.getElementById("inspect-default-view"),
+
+  // Dasha Timeline Elements
+  dashaTimelineContainer: document.getElementById("dasha-timeline-container"),
+  dashaActiveBadge: document.getElementById("dasha-active-badge"),
+  dashaActiveLabel: document.getElementById("dasha-active-label"),
+  dashaDetailCard: document.getElementById("dasha-detail-card"),
+
+  // Yoga Finder Elements
+  yogaGrid: document.getElementById("yoga-grid"),
+  yogaFilterPills: document.querySelectorAll(".yoga-filter-pills .filter-pill"),
+
+  // Synastry Mode Elements
+  synastryVisualizerPanel: document.getElementById("synastry-visualizer-panel"),
+  btnSynastrySide: document.getElementById("btn-synastry-side"),
+  btnSynastryStack: document.getElementById("btn-synastry-stack"),
+  synastryChartsContainer: document.getElementById("synastry-charts-container"),
+  synastrySvgChartA: document.getElementById("synastry-svg-chart-a"),
+  synastrySvgChartB: document.getElementById("synastry-svg-chart-b"),
+  synastryInteractionCard: document.getElementById("synastry-interaction-card"),
+  synastryInteractionText: document.getElementById("synastry-interaction-text"),
+
+  // Modals
+  snapshotModal: document.getElementById("snapshot-modal"),
+  btnCloseSnapshot: document.getElementById("btn-close-snapshot"),
+  snapshotCanvas: document.getElementById("snapshot-canvas"),
+  btnDownloadSnapshot: document.getElementById("btn-download-snapshot"),
+  btnCopySnapshot: document.getElementById("btn-copy-snapshot"),
+
+  remediesModal: document.getElementById("remedies-modal"),
+  btnCloseRemedies: document.getElementById("btn-close-remedies"),
+  remediesModalTitle: document.getElementById("remedies-modal-title"),
+  remediesModalSubtitle: document.getElementById("remedies-modal-subtitle"),
+  remediesBody: document.getElementById("remedies-body"),
+
+  connectionExplainModal: document.getElementById("connection-explain-modal"),
+  btnCloseExplain: document.getElementById("btn-close-explain"),
+  explainTypeBadge: document.getElementById("explain-type-badge"),
+  explainTitleText: document.getElementById("explain-title-text"),
+  explainSourceMeaning: document.getElementById("explain-source-meaning"),
+  explainAiText: document.getElementById("explain-ai-text"),
 
   // Milan Elements
   milanForm: document.getElementById("milan-form"),
@@ -664,13 +756,13 @@ function initializeUserProfile(name, dob, tob, pob) {
 function loadDashboardModules() {
   // Reset chart selection to Lagna on reload
   state.chartType = "lagna";
-  els.selectChartType.value = "lagna";
-  els.chartTitleHeader.textContent = "Lagna Kundli (D1)";
+  if (els.selectChartType) els.selectChartType.value = "lagna";
+  if (els.chartTitleHeader) els.chartTitleHeader.textContent = "Lagna Kundli (D1)";
 
   // 1. Initialise Chat History
   if (state.currentUser) {
     // If logged in, we let syncUserDataFromDB fetch and render the messages
-    els.chatMessages.innerHTML = "";
+    if (els.chatMessages) els.chatMessages.innerHTML = "";
   } else {
     const cachedHistory = localStorage.getItem(`vedasync_chat_history_${state.userProfile.dob}`);
     if (cachedHistory) {
@@ -678,31 +770,170 @@ function loadDashboardModules() {
       renderChatMessages();
     } else {
       state.chatHistory = [];
-      els.chatMessages.innerHTML = "";
+      if (els.chatMessages) els.chatMessages.innerHTML = "";
       addInitialAstrologerGreeting();
     }
   }
 
-  // 2. Render Lagna chart
+  // 2. Render Lagna chart with Drishti & Connections
   drawLagnaChart();
 
   // 3. Render planetary table
   renderPlanetaryTable();
 
   // 4. Update core attributes display
-  els.natalLagnaVal.textContent = state.userProfile.lagna.rashi.split(" ")[0];
-  els.natalNakshatraVal.textContent = state.userProfile.nakshatra.name;
-  els.natalLordVal.textContent = state.userProfile.nakshatra.lord;
-  els.natalRashiVal.textContent = state.userProfile.moonSign.name.split(" ")[0];
+  if (els.natalLagnaVal) els.natalLagnaVal.textContent = state.userProfile.lagna.rashi.split(" ")[0];
+  if (els.natalNakshatraVal) els.natalNakshatraVal.textContent = state.userProfile.nakshatra.name;
+  if (els.natalLordVal) els.natalLordVal.textContent = state.userProfile.nakshatra.lord;
+  if (els.natalRashiVal) els.natalRashiVal.textContent = state.userProfile.moonSign.name.split(" ")[0];
 
-  // 5. Reset compatibility screen results
-  els.milanResultPanel.classList.add("hidden");
-  els.milanP2Name.value = "";
-  els.milanP2Date.value = "";
-  els.milanP2Time.value = "";
+  // 5. Render Dasha Timeline & Yoga Finder
+  renderDashaTimeline();
+  renderYogaFinder("all");
+  renderInspectPanel(null); // Default view
+
+  // 6. Reset compatibility screen results
+  if (els.milanResultPanel) els.milanResultPanel.classList.add("hidden");
+  if (els.milanP2Name) els.milanP2Name.value = "";
+  if (els.milanP2Date) els.milanP2Date.value = "";
+  if (els.milanP2Time) els.milanP2Time.value = "";
+
+  // 7. Initialize advanced feature listeners
+  initAdvancedFeaturesListeners();
 
   // Go to Chat view by default
   switchTab("tab-chat");
+}
+
+let advancedListenersInitialized = false;
+function initAdvancedFeaturesListeners() {
+  if (advancedListenersInitialized) return;
+  advancedListenersInitialized = true;
+
+  // 1. Explore Connections button
+  safeBind(els.btnExploreMode, "click", toggleExploreMode);
+
+  // 2. Connections layer toggle switch
+  safeBind(els.toggleConnections, "change", (e) => {
+    toggleConnections(e.target.checked);
+  });
+
+  // 3. Gochar Transits toggle switch
+  safeBind(els.toggleTransits, "change", (e) => {
+    toggleTransits(e.target.checked);
+  });
+
+  // 4. Transit Date Picker
+  safeBind(els.transitDatePicker, "change", (e) => {
+    state.transitDate = e.target.value ? new Date(e.target.value + "T12:00:00") : new Date();
+    drawLagnaChart();
+  });
+
+  // 5. Clear highlights / Reset view
+  safeBind(els.btnClearHighlights, "click", clearHighlights);
+
+  // 6. Share Snapshot
+  safeBind(els.btnShareChart, "click", generateShareableSnapshot);
+
+  // 7. Life Area Lens pills
+  els.lensPills.forEach(pill => {
+    safeBind(pill, "click", () => {
+      const lensKey = pill.getAttribute("data-lens");
+      setLifeAreaLens(lensKey);
+    });
+  });
+
+  // 8. Close Connection Card
+  safeBind(els.btnCloseConnCard, "click", hideConnectionCard);
+
+  // 9. Explain Connection with AI Guru
+  safeBind(els.btnExplainConn, "click", () => {
+    if (state.activeConnection) {
+      explainConnectionWithAI(state.activeConnection);
+    }
+  });
+
+  // 10. Close Inspect Panel
+  safeBind(els.btnCloseInspect, "click", closeInspectPanel);
+
+  // 11. Yoga Filter Pills
+  els.yogaFilterPills.forEach(pill => {
+    safeBind(pill, "click", () => {
+      els.yogaFilterPills.forEach(p => p.classList.remove("active"));
+      pill.classList.add("active");
+      const filter = pill.getAttribute("data-filter");
+      renderYogaFinder(filter);
+    });
+  });
+
+  // 12. Synastry View Toggle (Side-by-side vs Stacked)
+  safeBind(els.btnSynastrySide, "click", () => {
+    if (els.btnSynastrySide) els.btnSynastrySide.classList.add("active");
+    if (els.btnSynastryStack) els.btnSynastryStack.classList.remove("active");
+    if (els.synastryChartsContainer) {
+      els.synastryChartsContainer.classList.remove("stacked");
+      els.synastryChartsContainer.classList.add("side-by-side");
+    }
+  });
+
+  safeBind(els.btnSynastryStack, "click", () => {
+    if (els.btnSynastryStack) els.btnSynastryStack.classList.add("active");
+    if (els.btnSynastrySide) els.btnSynastrySide.classList.remove("active");
+    if (els.synastryChartsContainer) {
+      els.synastryChartsContainer.classList.remove("side-by-side");
+      els.synastryChartsContainer.classList.add("stacked");
+    }
+  });
+
+  // 13. Snapshot Modal actions
+  safeBind(els.btnCloseSnapshot, "click", () => {
+    if (els.snapshotModal) els.snapshotModal.classList.remove("active");
+  });
+
+  safeBind(els.btnDownloadSnapshot, "click", () => {
+    const canvas = els.snapshotCanvas;
+    if (!canvas) return;
+    const a = document.createElement("a");
+    a.download = `vedasync-${state.userProfile.name.toLowerCase().replace(/\s+/g, "_")}-kundli.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+    showToast("Chart Snapshot downloaded successfully!", "success");
+  });
+
+  safeBind(els.btnCopySnapshot, "click", async () => {
+    const canvas = els.snapshotCanvas;
+    if (!canvas) return;
+    try {
+      canvas.toBlob(async (blob) => {
+        if (navigator.clipboard && window.ClipboardItem) {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+          showToast("Snapshot copied to clipboard!", "success");
+        } else if (navigator.share) {
+          const file = new File([blob], "vedasync-kundli.png", { type: "image/png" });
+          await navigator.share({
+            title: `${state.userProfile.name}'s Kundli Chart`,
+            text: `Vedic Astrological Alignment from Vedasync.`,
+            files: [file]
+          });
+        } else {
+          showToast("Clipboard image copying not supported in this browser.", "error");
+        }
+      });
+    } catch (err) {
+      console.warn(err);
+      showToast("Could not copy snapshot automatically.", "error");
+    }
+  });
+
+  // 14. Remedies Modal Close
+  safeBind(els.btnCloseRemedies, "click", () => {
+    if (els.remediesModal) els.remediesModal.classList.remove("active");
+  });
+
+  // 15. Connection Explain Modal Close
+  safeBind(els.btnCloseExplain, "click", () => {
+    if (els.connectionExplainModal) els.connectionExplainModal.classList.remove("active");
+  });
 }
 
 function switchTab(tabId) {
@@ -734,60 +965,69 @@ function switchTab(tabId) {
 
 /* -------------------------------------------------------------
  * 4. KUNDLI CHART DRAWING MODULE (North and South SVGs)
+ * With Interactive Drishti & Connections Layer, Gochar Transits,
+ * and Selection Highlight System
  * ------------------------------------------------------------- */
+
+// North Indian House Polygons & Centroids
+const NORTH_HOUSE_POLYGONS = [
+  { h: 1, points: "150,5 222.5,77.5 150,150 77.5,77.5", cx: 150, cy: 77.5, name: "Tanu" },
+  { h: 2, points: "5,5 150,5 77.5,77.5", cx: 77.5, cy: 30, name: "Dhana" },
+  { h: 3, points: "5,5 77.5,77.5 5,150", cx: 30, cy: 77.5, name: "Sahaja" },
+  { h: 4, points: "5,150 77.5,77.5 150,150 77.5,222.5", cx: 77.5, cy: 150, name: "Sukha" },
+  { h: 5, points: "5,150 77.5,222.5 5,295", cx: 30, cy: 222.5, name: "Putra" },
+  { h: 6, points: "5,295 77.5,222.5 150,295", cx: 77.5, cy: 270, name: "Ari" },
+  { h: 7, points: "150,150 222.5,222.5 150,295 77.5,222.5", cx: 150, cy: 222.5, name: "Kalatra" },
+  { h: 8, points: "150,295 222.5,222.5 295,295", cx: 222.5, cy: 270, name: "Randhra" },
+  { h: 9, points: "295,150 222.5,222.5 295,295", cx: 270, cy: 222.5, name: "Bhagya" },
+  { h: 10, points: "150,150 222.5,77.5 295,150 222.5,222.5", cx: 222.5, cy: 150, name: "Karma" },
+  { h: 11, points: "295,5 295,150 222.5,77.5", cx: 270, cy: 77.5, name: "Labha" },
+  { h: 12, points: "150,5 295,5 222.5,77.5", cx: 222.5, cy: 30, name: "Vyaya" }
+];
+
 function drawLagnaChart() {
   const container = els.kundliSvgContainer;
-  container.innerHTML = ""; // Clear existing
+  if (!container || !state.userProfile) return;
+  container.innerHTML = "";
 
   const p = state.userProfile;
   const size = 300;
 
-  // Determine starting reference sign index and active houses based on chart selection
-  let startSignIndex = p.lagna.rashiIndex;
-  let activeHouses = p.planetHouses;
+  // 1. Calculate computed connections and relationships strictly from the astrology engine
+  const computed = window.VedasyncEngine.getComputedConnections(p, state.chartType);
+  state.computedConnections = computed;
 
-  if (state.chartType === "chandra") {
-    startSignIndex = p.moonSign.rashiIndex;
-    activeHouses = p.chandraHouses;
-  } else if (state.chartType === "navamsha") {
-    startSignIndex = p.lagna.navRashiIndex;
-    activeHouses = p.navamshaHouses;
+  // 2. Calculate Transits (Gochar) if enabled
+  let transitData = null;
+  if (state.showTransits) {
+    transitData = window.VedasyncEngine.getTransitPositions(state.transitDate || new Date(), p);
+    if (els.legendTransitItem) els.legendTransitItem.style.display = "flex";
+  } else {
+    if (els.legendTransitItem) els.legendTransitItem.style.display = "none";
   }
 
-  if (state.chartStyle === "north") {
-    // North Indian Chart: Diamond-based structure
-    // Top-middle is House 1. Counter-clockwise order.
-    const houseCoords = [
-      { h: 1, cx: 150, cy: 85, align: "middle" },
-      { h: 2, cx: 80, cy: 50, align: "start" },
-      { h: 3, cx: 50, cy: 80, align: "start" },
-      { h: 4, cx: 85, cy: 150, align: "start" },
-      { h: 5, cx: 50, cy: 220, align: "start" },
-      { h: 6, cx: 80, cy: 250, align: "start" },
-      { h: 7, cx: 150, cy: 215, align: "middle" },
-      { h: 8, cx: 220, cy: 250, align: "end" },
-      { h: 9, cx: 250, cy: 220, align: "end" },
-      { h: 10, cx: 215, cy: 150, align: "end" },
-      { h: 11, cx: 250, cy: 80, align: "end" },
-      { h: 12, cx: 220, cy: 50, align: "end" }
-    ];
+  let startSignIndex = computed.startSignIndex;
+  let activeHouses = computed.activeHouses;
 
-    let svgHtml = `<svg viewBox="0 0 ${size} ${size}" class="svg-container">`;
-    // Outer border
+  if (state.chartStyle === "north") {
+    // -------------------------------------------------------------
+    // NORTH INDIAN INTERACTIVE KUNDLI
+    // -------------------------------------------------------------
+    let svgHtml = `<svg viewBox="0 0 ${size} ${size}" class="svg-container" id="kundli-svg-root" xmlns="http://www.w3.org/2000/svg">`;
+
+    // Empty space click catcher
+    svgHtml += `<rect id="svg-bg-catcher" x="0" y="0" width="${size}" height="${size}" fill="transparent" style="cursor: default;" />`;
+
+    // Outer border & structural geometry
     svgHtml += `<rect x="5" y="5" width="290" height="290" class="chart-border" />`;
-    // Diagonals
     svgHtml += `<line x1="5" y1="5" x2="295" y2="295" class="chart-line" />`;
     svgHtml += `<line x1="5" y1="295" x2="295" y2="5" class="chart-line" />`;
-    // Inner diamond
     svgHtml += `<polygon points="150,5 295,150 150,295 5,150" fill="none" class="chart-line" />`;
 
     // Map planets in their houses
     const planetsInHouses = Array.from({ length: 13 }, () => []);
-    
-    // Position Lagna (Ascendant) in the correct house box
     let lagnaHouseNum = 1;
     if (state.chartType === "chandra") {
-      // In Moon chart, Lagna moves relative to Moon sign
       lagnaHouseNum = p.lagna.rashiIndex - p.moonSign.rashiIndex + 1;
       if (lagnaHouseNum <= 0) lagnaHouseNum += 12;
     }
@@ -797,84 +1037,278 @@ function drawLagnaChart() {
       planetsInHouses[activeHouses[planet]].push(planet);
     }
 
-    // Render numbers and planets
-    houseCoords.forEach(hc => {
-      // Sign number mapping
+    // Determine highlight/dim states
+    const sel = state.selectedEntity;
+    const activeLens = state.activeLens;
+    const connectedHouseSet = new Set();
+    const connectedPlanetSet = new Set();
+
+    let activeConnectionsList = [];
+
+    if (sel) {
+      if (sel.type === "house") {
+        connectedHouseSet.add(sel.houseNum);
+        activeConnectionsList = computed.connections.filter(c => 
+          (c.source.type === "house" && c.source.houseNum === sel.houseNum) ||
+          (c.target.type === "house" && c.target.houseNum === sel.houseNum) ||
+          (c.source.type === "planet" && c.source.houseNum === sel.houseNum) ||
+          (c.targetHouseNum === sel.houseNum)
+        );
+      } else if (sel.type === "planet") {
+        connectedPlanetSet.add(sel.id);
+        connectedHouseSet.add(sel.houseNum);
+        activeConnectionsList = computed.connections.filter(c => 
+          c.source.id === sel.id || c.target.id === sel.id || c.targetHouseNum === sel.houseNum
+        );
+      }
+
+      activeConnectionsList.forEach(c => {
+        if (c.source.houseNum) connectedHouseSet.add(c.source.houseNum);
+        if (c.targetHouseNum) connectedHouseSet.add(c.targetHouseNum);
+        if (c.source.type === "planet") connectedPlanetSet.add(c.source.id);
+        if (c.target.type === "planet") connectedPlanetSet.add(c.target.id);
+      });
+    } else if (activeLens && activeLens !== "all") {
+      const config = window.VedasyncEngine.LIFE_AREA_CONFIG[activeLens];
+      if (config) {
+        config.houses.forEach(h => connectedHouseSet.add(h));
+        config.karakas.forEach(k => connectedPlanetSet.add(k));
+        activeConnectionsList = computed.connections.filter(c => 
+          config.houses.includes(c.source.houseNum) || config.houses.includes(c.targetHouseNum)
+        );
+      }
+    } else if (state.exploreMode) {
+      // In Explore mode with nothing clicked, show all major aspects subtly
+      activeConnectionsList = computed.connections.filter(c => c.subType === "aspect" || c.subType === "conjunction");
+    }
+
+    // 1. Render Interactive House Polygons
+    svgHtml += `<g id="houses-layer">`;
+    NORTH_HOUSE_POLYGONS.forEach(hp => {
+      let houseClass = "house-polygon";
+      if (sel) {
+        if (sel.type === "house" && sel.houseNum === hp.h) {
+          houseClass += " selected";
+        } else if (connectedHouseSet.has(hp.h)) {
+          houseClass += " connected-highlight";
+        } else {
+          houseClass += " dimmed";
+        }
+      } else if (activeLens && activeLens !== "all") {
+        if (connectedHouseSet.has(hp.h)) {
+          houseClass += " connected-highlight";
+        } else {
+          houseClass += " dimmed";
+        }
+      }
+
+      svgHtml += `<polygon points="${hp.points}" class="${houseClass}" data-house="${hp.h}" />`;
+    });
+    svgHtml += `</g>`;
+
+    // 2. Render Sign Numbers inside houses
+    svgHtml += `<g id="sign-numbers-layer" pointer-events="none">`;
+    NORTH_HOUSE_POLYGONS.forEach(hc => {
       const signNum = (startSignIndex + hc.h - 1) % 12 + 1;
-      
-      // Draw sign number in the corner
       let numX = hc.cx;
       let numY = hc.cy;
-      if (hc.h === 1) { numY = hc.cy - 20; }
-      else if (hc.h === 7) { numY = hc.cy + 25; }
-      else if (hc.h === 4) { numX = hc.cx - 20; }
-      else if (hc.h === 10) { numX = hc.cx + 20; }
-      else if ([2, 3, 5, 6].includes(hc.h)) { numX = hc.cx - 15; numY = hc.cy - 10; }
-      else if ([8, 9, 11, 12].includes(hc.h)) { numX = hc.cx + 15; numY = hc.cy - 10; }
 
-      svgHtml += `<text x="${numX}" y="${numY}" text-anchor="middle" class="chart-text-sign">${signNum}</text>`;
+      if (hc.h === 1) { numY = 22; }
+      else if (hc.h === 2) { numX = 77.5; numY = 16; }
+      else if (hc.h === 3) { numX = 16; numY = 77.5; }
+      else if (hc.h === 4) { numX = 22; numY = 150; }
+      else if (hc.h === 5) { numX = 16; numY = 222.5; }
+      else if (hc.h === 6) { numX = 77.5; numY = 286; }
+      else if (hc.h === 7) { numY = 278; }
+      else if (hc.h === 8) { numX = 222.5; numY = 286; }
+      else if (hc.h === 9) { numX = 284; numY = 222.5; }
+      else if (hc.h === 10) { numX = 278; numY = 150; }
+      else if (hc.h === 11) { numX = 284; numY = 77.5; }
+      else if (hc.h === 12) { numX = 222.5; numY = 16; }
 
-      // Render planets inside house
+      const isDim = (sel && !connectedHouseSet.has(hc.h)) || (activeLens !== "all" && !connectedHouseSet.has(hc.h));
+      const dimStyle = isDim ? 'style="opacity: 0.25;"' : '';
+      svgHtml += `<text x="${numX}" y="${numY}" text-anchor="middle" class="chart-text-sign" ${dimStyle}>${signNum}</text>`;
+    });
+    svgHtml += `</g>`;
+
+    // Map planet node coordinates for connector line endpoints
+    const planetCoords = {};
+    const transitCoords = {};
+
+    // 3. Render Planet Badges
+    svgHtml += `<g id="planets-layer">`;
+    NORTH_HOUSE_POLYGONS.forEach(hc => {
       const planets = planetsInHouses[hc.h];
-      if (planets.length > 0) {
-        let textAnchor = "middle";
-        if (hc.align === "start") textAnchor = "start";
-        if (hc.align === "end") textAnchor = "end";
+      const count = planets.length;
 
-        // Stack planets vertically if multiple
-        const offsetStep = 13;
-        const totalHeight = (planets.length - 1) * offsetStep;
-        let startY = hc.cy - totalHeight / 2 + 3;
-
-        if (hc.h === 1) startY += 8;
-        if (hc.h === 7) startY -= 8;
-
+      if (count > 0) {
         planets.forEach((pl, i) => {
-          const abbrev = pl === "Asc" ? "As" : pl.substring(0, 2);
-          const color = pl === "Asc" ? "var(--accent-purple)" : pl === "Sun" || pl === "Moon" ? "var(--gold-light)" : "var(--text-primary)";
-          const fontWeight = pl === "Asc" ? "bold" : "normal";
+          let px = hc.cx;
+          let py = hc.cy;
 
-          svgHtml += `<text x="${hc.cx}" y="${startY + (i * offsetStep)}" text-anchor="${textAnchor}" fill="${color}" font-weight="${fontWeight}" class="chart-text-planets">${abbrev}</text>`;
+          // Spatial layout around centroid depending on diamond/triangle
+          if (count === 1) {
+            py = hc.cy + 3;
+          } else if (count === 2) {
+            py = hc.cy - 7 + (i * 15);
+          } else if (count === 3) {
+            py = hc.cy - 14 + (i * 14);
+          } else {
+            // 4+ planets: 2-column distribution
+            const col = i % 2 === 0 ? -12 : 12;
+            const row = Math.floor(i / 2) * 14 - 10;
+            px = hc.cx + col;
+            py = hc.cy + row;
+          }
+
+          planetCoords[pl] = { x: px, y: py, house: hc.h };
+
+          let plClass = "planet-badge";
+          if (sel) {
+            if (sel.type === "planet" && sel.id === pl) {
+              plClass += " selected";
+            } else if (connectedPlanetSet.has(pl)) {
+              plClass += " connected-highlight";
+            } else {
+              plClass += " dimmed";
+            }
+          } else if (activeLens && activeLens !== "all") {
+            if (connectedPlanetSet.has(pl)) {
+              plClass += " connected-highlight";
+            } else {
+              plClass += " dimmed";
+            }
+          }
+
+          const abbrev = pl === "Asc" ? "As" : pl.substring(0, 2);
+          const textColor = pl === "Asc" ? "var(--accent-purple)" : pl === "Sun" || pl === "Moon" ? "var(--gold-light)" : "var(--text-primary)";
+          const borderColor = pl === "Asc" ? "var(--accent-purple)" : "rgba(245, 158, 11, 0.4)";
+
+          svgHtml += `
+            <g class="${plClass}" data-planet="${pl}" data-house="${hc.h}" transform="translate(${px}, ${py})">
+              <rect x="-14" y="-8" width="28" height="16" rx="4" fill="rgba(13, 10, 30, 0.85)" stroke="${borderColor}" stroke-width="1" />
+              <text x="0" y="4" text-anchor="middle" fill="${textColor}" font-size="10.5px" font-weight="${pl === 'Asc' ? 'bold' : 'normal'}" font-family="var(--font-sans)">${abbrev}</text>
+            </g>
+          `;
         });
       }
+
+      // Render Gochar Transit planets if active
+      if (transitData && transitData.transitHouses) {
+        const transitsInThisHouse = [];
+        for (const tPl in transitData.transitHouses) {
+          if (transitData.transitHouses[tPl] === hc.h) transitsInThisHouse.push(tPl);
+        }
+
+        if (transitsInThisHouse.length > 0) {
+          transitsInThisHouse.forEach((tPl, tIdx) => {
+            const tx = hc.cx + (tIdx % 2 === 0 ? 18 : -18);
+            const ty = hc.cy + 18 + (Math.floor(tIdx / 2) * 12);
+            transitCoords[tPl] = { x: tx, y: ty, house: hc.h };
+
+            const tAbbrev = tPl.substring(0, 2);
+            svgHtml += `
+              <g class="transit-badge" data-transit="${tPl}" transform="translate(${tx}, ${ty})">
+                <rect x="-15" y="-7" width="30" height="13" rx="3" fill="rgba(6, 182, 212, 0.25)" stroke="#06B6D4" stroke-width="1" />
+                <text x="0" y="3" text-anchor="middle" fill="#06B6D4" font-size="8.5px" font-weight="bold" font-family="var(--font-sans)">T-${tAbbrev}</text>
+              </g>
+            `;
+          });
+        }
+      }
     });
+    svgHtml += `</g>`;
+
+    // 4. Render Animated Connector Lines Layer (Drishti, Lordships, Conjunctions)
+    if (state.showConnections && activeConnectionsList.length > 0) {
+      svgHtml += `<g id="connections-layer">`;
+      activeConnectionsList.forEach(conn => {
+        let x1, y1, x2, y2;
+
+        // Source coordinates
+        if (conn.source.type === "planet" && planetCoords[conn.source.id]) {
+          x1 = planetCoords[conn.source.id].x;
+          y1 = planetCoords[conn.source.id].y;
+        } else if (conn.source.houseNum) {
+          x1 = NORTH_HOUSE_POLYGONS[conn.source.houseNum - 1].cx;
+          y1 = NORTH_HOUSE_POLYGONS[conn.source.houseNum - 1].cy;
+        } else {
+          x1 = 150; y1 = 150;
+        }
+
+        // Target coordinates
+        if (conn.target.type === "planet" && planetCoords[conn.target.id]) {
+          x2 = planetCoords[conn.target.id].x;
+          y2 = planetCoords[conn.target.id].y;
+        } else if (conn.targetHouseNum) {
+          x2 = NORTH_HOUSE_POLYGONS[conn.targetHouseNum - 1].cx;
+          y2 = NORTH_HOUSE_POLYGONS[conn.targetHouseNum - 1].cy;
+        } else {
+          x2 = 150; y2 = 150;
+        }
+
+        // Skip degenerate point lines
+        if (Math.abs(x1 - x2) < 2 && Math.abs(y1 - y2) < 2) return;
+
+        // Curve lines slightly for elegance and avoiding collision
+        const midX = (x1 + x2) / 2;
+        const midY = (y1 + y2) / 2;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const curveOffset = Math.min(22, dist * 0.12);
+        const nx = -dy / dist;
+        const ny = dx / dist;
+        const cx = midX + nx * curveOffset;
+        const cy = midY + ny * curveOffset;
+
+        let lineClass = "line-aspect";
+        if (conn.subType === "conjunction") lineClass = "line-conjunction";
+        else if (conn.subType === "lordship") lineClass = "line-lordship";
+
+        svgHtml += `
+          <path d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" 
+                class="${lineClass}" 
+                data-conn-id="${conn.id}" 
+                fill="none" 
+                pointer-events="stroke" />
+        `;
+      });
+      svgHtml += `</g>`;
+    }
 
     svgHtml += `</svg>`;
     container.innerHTML = svgHtml;
 
+    // Attach interactive click & hover handlers
+    attachKundliInteractions(computed, activeConnectionsList);
+
   } else {
-    // South Indian Chart: Fixed Box Grid (12 Outer Boxes)
+    // -------------------------------------------------------------
+    // SOUTH INDIAN INTERACTIVE KUNDLI
+    // -------------------------------------------------------------
     const boxCoords = [
-      { r: 0, c: 1, s: 1, name: "Ar" },  // Aries
-      { r: 0, c: 2, s: 2, name: "Ta" },  // Taurus
-      { r: 0, c: 3, s: 3, name: "Ge" },  // Gemini
-      { r: 1, c: 3, s: 4, name: "Ca" },  // Cancer
-      { r: 2, c: 3, s: 5, name: "Le" },  // Leo
-      { r: 3, c: 3, s: 6, name: "Vi" },  // Virgo
-      { r: 3, c: 2, s: 7, name: "Li" },  // Libra
-      { r: 3, c: 1, s: 8, name: "Sc" },  // Scorpio
-      { r: 3, c: 0, s: 9, name: "Sa" },  // Sagittarius
-      { r: 2, c: 0, s: 10, name: "Cp" }, // Capricorn
-      { r: 1, c: 0, s: 11, name: "Aq" }, // Aquarius
-      { r: 0, c: 0, s: 12, name: "Pi" }  // Pisces
+      { r: 0, c: 1, s: 1, name: "Ar" }, { r: 0, c: 2, s: 2, name: "Ta" }, { r: 0, c: 3, s: 3, name: "Ge" },
+      { r: 1, c: 3, s: 4, name: "Ca" }, { r: 2, c: 3, s: 5, name: "Le" }, { r: 3, c: 3, s: 6, name: "Vi" },
+      { r: 3, c: 2, s: 7, name: "Li" }, { r: 3, c: 1, s: 8, name: "Sc" }, { r: 3, c: 0, s: 9, name: "Sa" },
+      { r: 2, c: 0, s: 10, name: "Cp" }, { r: 1, c: 0, s: 11, name: "Aq" }, { r: 0, c: 0, s: 12, name: "Pi" }
     ];
 
-    let svgHtml = `<svg viewBox="0 0 ${size} ${size}" class="svg-container">`;
+    let svgHtml = `<svg viewBox="0 0 ${size} ${size}" class="svg-container" id="kundli-svg-root">`;
     svgHtml += `<rect x="5" y="5" width="290" height="290" class="chart-border" />`;
-
     const boxW = 72.5;
-    
+
     svgHtml += `<line x1="${boxW+5}" y1="5" x2="${boxW+5}" y2="295" class="chart-line" />`;
     svgHtml += `<line x1="${boxW*2+5}" y1="5" x2="${boxW*2+5}" y2="295" class="chart-line" />`;
     svgHtml += `<line x1="${boxW*3+5}" y1="5" x2="${boxW*3+5}" y2="295" class="chart-line" />`;
-
     svgHtml += `<line x1="5" y1="${boxW+5}" x2="295" y2="${boxW+5}" class="chart-line" />`;
     svgHtml += `<line x1="5" y1="${boxW*2+5}" x2="295" y2="${boxW*2+5}" class="chart-line" />`;
     svgHtml += `<line x1="5" y1="${boxW*3+5}" x2="295" y2="${boxW*3+5}" class="chart-line" />`;
 
     svgHtml += `<rect x="${boxW+5.5}" y="${boxW+5.5}" width="${boxW*2-1}" height="${boxW*2-1}" fill="rgba(6, 6, 12, 0.9)" />`;
     svgHtml += `<text x="150" y="145" text-anchor="middle" fill="var(--gold-light)" font-family="var(--font-display)" font-size="15px" font-weight="bold">Vedasync</text>`;
-    
+
     const chartLabels = {
       lagna: `Lagna: ${p.lagna.rashi.split(" ")[0]}`,
       chandra: `Chandra: ${p.moonSign.name.split(" ")[0]}`,
@@ -882,39 +1316,25 @@ function drawLagnaChart() {
     };
     svgHtml += `<text x="150" y="165" text-anchor="middle" fill="var(--text-dark)" font-family="var(--font-sans)" font-size="10px">${chartLabels[state.chartType]}</text>`;
 
-    // Map planets in sign indices (0 to 11)
     const planetsInSigns = Array.from({ length: 12 }, () => []);
-    
-    // Set Lagna position sign number based on chart selection
     let lagnaSignIndex = p.lagna.rashiIndex;
     if (state.chartType === "navamsha") lagnaSignIndex = p.lagna.navRashiIndex;
-
     planetsInSigns[lagnaSignIndex].push("Asc");
-    
-    // Place planets in boxes depending on their coordinate signs
+
     for (const planet in p.planets) {
-      let rashiIdx;
-      if (state.chartType === "navamsha") {
-        rashiIdx = p.navamshaRashiIndices[planet];
-      } else {
-        rashiIdx = Math.floor(p.planets[planet] / 30);
-      }
+      let rashiIdx = (state.chartType === "navamsha") ? p.navamshaRashiIndices[planet] : Math.floor(p.planets[planet] / 30);
       planetsInSigns[rashiIdx].push(planet);
     }
 
-    // Render box details
     boxCoords.forEach(box => {
       const bx = box.c * boxW + 5;
       const by = box.r * boxW + 5;
-
       svgHtml += `<text x="${bx + 8}" y="${by + 16}" fill="var(--text-dark)" font-family="var(--font-outfit)" font-size="10px" font-weight="bold">${box.name}</text>`;
 
-      // Draw diagonal line in the Lagna box
       if (box.s === lagnaSignIndex + 1) {
         svgHtml += `<line x1="${bx}" y1="${by}" x2="${bx + boxW}" y2="${by + boxW}" stroke="rgba(139, 92, 246, 0.3)" stroke-width="1.5" />`;
       }
 
-      // Draw planets
       const planets = planetsInSigns[box.s - 1];
       if (planets.length > 0) {
         const cellCenter = bx + boxW / 2;
@@ -925,9 +1345,7 @@ function drawLagnaChart() {
         planets.forEach((pl, i) => {
           const abbrev = pl === "Asc" ? "As" : pl.substring(0, 2);
           const color = pl === "Asc" ? "var(--accent-purple)" : pl === "Sun" || pl === "Moon" ? "var(--gold-light)" : "var(--text-primary)";
-          const fontWeight = pl === "Asc" ? "bold" : "normal";
-
-          svgHtml += `<text x="${cellCenter}" y="${startY + (i * offsetStep)}" text-anchor="middle" fill="${color}" font-weight="${fontWeight}" font-size="10px" font-family="var(--font-sans)">${abbrev}</text>`;
+          svgHtml += `<text x="${cellCenter}" y="${startY + (i * offsetStep)}" text-anchor="middle" fill="${color}" font-size="10px" font-family="var(--font-sans)">${abbrev}</text>`;
         });
       }
     });
@@ -936,6 +1354,941 @@ function drawLagnaChart() {
     container.innerHTML = svgHtml;
   }
 }
+
+/**
+ * Attaches click, hover, and dismiss handlers on the interactive Kundli SVG
+ */
+function attachKundliInteractions(computed, activeConnectionsList) {
+  const container = els.kundliSvgContainer;
+  if (!container) return;
+
+  // 1. Click empty space clears highlights
+  const bgCatcher = container.querySelector("#svg-bg-catcher");
+  if (bgCatcher) {
+    bgCatcher.addEventListener("click", () => {
+      clearHighlights();
+    });
+  }
+
+  // 2. Click house polygons
+  container.querySelectorAll(".house-polygon").forEach(poly => {
+    poly.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const h = parseInt(poly.getAttribute("data-house"));
+      selectHouse(h);
+    });
+  });
+
+  // 3. Click planet badges
+  container.querySelectorAll(".planet-badge").forEach(badge => {
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pl = badge.getAttribute("data-planet");
+      const h = parseInt(badge.getAttribute("data-house"));
+      selectPlanet(pl, h);
+    });
+  });
+
+  // 4. Click Gochar transit badges
+  container.querySelectorAll(".transit-badge").forEach(tBadge => {
+    tBadge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pl = tBadge.getAttribute("data-transit");
+      showToast(`Transit ${pl} (Gochar) in House ${state.userProfile.planetHouses[pl]} relative to birth coordinates.`, "success");
+    });
+  });
+
+  // 5. Connector line hover and click
+  container.querySelectorAll("#connections-layer path").forEach(path => {
+    const connId = path.getAttribute("data-conn-id");
+    const conn = activeConnectionsList.find(c => c.id === connId);
+    if (!conn) return;
+
+    path.addEventListener("mouseenter", (e) => {
+      showConnectionCard(conn, e);
+    });
+
+    path.addEventListener("click", (e) => {
+      e.stopPropagation();
+      showConnectionCard(conn, e);
+    });
+  });
+}
+
+/**
+ * House selection handler
+ */
+function selectHouse(h) {
+  state.selectedEntity = { type: "house", id: `h${h}`, houseNum: h };
+  renderInspectPanel("house", h);
+  drawLagnaChart();
+
+  if (state.exploreMode && els.exploreBannerText) {
+    const hd = state.computedConnections.houseData[h];
+    els.exploreBannerText.textContent = `House ${h} (${hd.signName.split(" ")[0]}): Ruled by ${hd.lord} in House ${hd.lordPlacementHouse}. Occupants: ${hd.occupants.join(", ") || "None"}. Aspects received: ${hd.aspectsReceived.map(a => a.planet).join(", ") || "None"}. Chain: ${[h, hd.lordPlacementHouse, ...hd.connectedHouses].join(" → ")}`;
+  }
+}
+
+/**
+ * Planet selection handler
+ */
+function selectPlanet(pl, h) {
+  state.selectedEntity = { type: "planet", id: pl, houseNum: h };
+  renderInspectPanel("planet", pl);
+  drawLagnaChart();
+
+  if (state.exploreMode && els.exploreBannerText) {
+    const p = state.userProfile;
+    const aspectOffsets = PLANET_ASPECT_OFFSETS[pl] || [7];
+    const aspectHouses = aspectOffsets.map(off => {
+      let t = (h + off - 1) % 12;
+      return t === 0 ? 12 : t;
+    });
+    els.exploreBannerText.textContent = `${pl} placed in House ${h}. Aspects: House ${aspectHouses.join(", ")}. Chain: ${[h, ...aspectHouses].join(" → ")}`;
+  }
+}
+
+/**
+ * Clears all active highlights and resets view
+ */
+function clearHighlights() {
+  state.selectedEntity = null;
+  state.activeConnection = null;
+  state.activeLens = "all";
+
+  // Reset lens pills
+  if (els.lensPills) {
+    els.lensPills.forEach(p => {
+      if (p.getAttribute("data-lens") === "all") p.classList.add("active");
+      else p.classList.remove("active");
+    });
+  }
+
+  // Hide floating card
+  hideConnectionCard();
+
+  // Hide life area card
+  if (els.lifeAreaCard) els.lifeAreaCard.classList.add("hidden");
+
+  // Reset inspect panel to default cosmic coordinates view
+  renderInspectPanel(null);
+
+  // Redraw chart in clean state
+  drawLagnaChart();
+
+  if (state.exploreMode && els.exploreBannerText) {
+    els.exploreBannerText.textContent = "Click any house or planet to trace its aspects, lordships, and conjunction chains.";
+  }
+}
+
+/**
+ * Toggles "Show Connections" layer
+ */
+function toggleConnections(enable) {
+  state.showConnections = enable;
+  drawLagnaChart();
+  showToast(`Connections layer turned ${enable ? "ON" : "OFF"}.`, "success");
+}
+
+/**
+ * Toggles "Explore Connections" Signature Mode
+ */
+function toggleExploreMode() {
+  state.exploreMode = !state.exploreMode;
+  if (els.btnExploreMode) {
+    els.btnExploreMode.classList.toggle("active", state.exploreMode);
+  }
+  if (els.exploreStatusBanner) {
+    els.exploreStatusBanner.classList.toggle("hidden", !state.exploreMode);
+  }
+
+  if (state.exploreMode) {
+    state.showConnections = true;
+    if (els.toggleConnections) els.toggleConnections.checked = true;
+    showToast("Explore Connections mode activated. Click any planet or house to explore.", "success");
+  } else {
+    clearHighlights();
+    showToast("Explore Connections mode deactivated.", "success");
+  }
+  drawLagnaChart();
+}
+
+/**
+ * Toggles Gochar Transits overlay
+ */
+function toggleTransits(enable) {
+  state.showTransits = enable;
+  if (els.transitDateContainer) {
+    els.transitDateContainer.classList.toggle("hidden", !enable);
+  }
+  drawLagnaChart();
+  showToast(`Live planetary transits (Gochar) ${enable ? "enabled" : "hidden"}.`, "success");
+}
+
+/**
+ * Sets Life Area Lens (Career, Marriage, Finance, etc.)
+ */
+function setLifeAreaLens(lensKey) {
+  state.activeLens = lensKey;
+  state.selectedEntity = null;
+
+  if (els.lensPills) {
+    els.lensPills.forEach(pill => {
+      pill.classList.toggle("active", pill.getAttribute("data-lens") === lensKey);
+    });
+  }
+
+  if (lensKey === "all") {
+    if (els.lifeAreaCard) els.lifeAreaCard.classList.add("hidden");
+    drawLagnaChart();
+    return;
+  }
+
+  const yogas = window.VedasyncEngine.detectYogas(state.userProfile);
+  const analysis = window.VedasyncEngine.analyzeLifeArea(lensKey, state.userProfile, yogas);
+
+  if (analysis && els.lifeAreaCard) {
+    els.lifeAreaCard.classList.remove("hidden");
+    els.lifeCardIcon.textContent = analysis.icon;
+    els.lifeCardTitle.textContent = analysis.title;
+    els.lifeCardHousesBadge.textContent = `Houses: ${analysis.houses.join(", ")}`;
+    els.lifeCardMeaning.textContent = analysis.meaning;
+
+    // Render house pills in life area card
+    let gridHtml = "";
+    analysis.houseBreakdown.forEach(hb => {
+      gridHtml += `
+        <div class="life-house-pill font-outfit">
+          <span class="life-house-h">House ${hb.house} (${hb.sign})</span>
+          <span class="life-house-desc">Lord: ${hb.lord} in H${hb.lordPlacement} • ${hb.occupants.length > 0 ? hb.occupants.join(", ") : "Empty"}</span>
+        </div>
+      `;
+    });
+    els.lifeCardGrid.innerHTML = gridHtml;
+
+    // Render yogas pills
+    if (analysis.relevantYogas.length > 0) {
+      els.lifeCardYogas.innerHTML = `
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--gold-light); margin-bottom: 4px;">Beneficial Yogas for this Life Theme:</div>
+        <div class="yoga-footer-pills font-outfit">
+          ${analysis.relevantYogas.map(y => `<span class="yoga-pill" style="background: rgba(245, 158, 11, 0.2); color: var(--gold-light); font-weight: 600;">${y.name}</span>`).join('')}
+        </div>
+      `;
+    } else {
+      els.lifeCardYogas.innerHTML = "";
+    }
+  }
+
+  drawLagnaChart();
+  showToast(`Applied ${analysis.title} Life Lens.`, "success");
+}
+
+/**
+ * Shows floating connection details card on line hover/click
+ */
+function showConnectionCard(conn, mouseEvent) {
+  state.activeConnection = conn;
+  const card = els.connectionFloatingCard;
+  if (!card) return;
+
+  els.connCardType.textContent = conn.type;
+  els.connCardTitle.textContent = conn.title;
+  els.connCardMeaning.textContent = conn.meaning;
+  card.classList.remove("hidden");
+}
+
+function hideConnectionCard() {
+  if (els.connectionFloatingCard) {
+    els.connectionFloatingCard.classList.add("hidden");
+  }
+}
+
+/**
+ * Unified Inspect Panel Component (House & Planet Reusable Component)
+ */
+function renderInspectPanel(mode, entityId) {
+  const panel = els.unifiedInspectPanel;
+  const header = els.inspectHeader;
+  const badge = els.inspectBadge;
+  const title = els.inspectTitle;
+  const body = els.inspectBody;
+  const defView = els.inspectDefaultView;
+
+  if (!panel) return;
+
+  if (!mode || !entityId) {
+    if (header) header.style.display = "none";
+    if (body) body.style.display = "none";
+    if (defView) defView.style.display = "block";
+    return;
+  }
+
+  if (defView) defView.style.display = "none";
+  if (header) header.style.display = "flex";
+  if (body) body.style.display = "block";
+
+  const p = state.userProfile;
+  const computed = state.computedConnections || window.VedasyncEngine.getComputedConnections(p, state.chartType);
+  const yogas = window.VedasyncEngine.detectYogas(p);
+
+  if (mode === "house") {
+    const h = parseInt(entityId);
+    const hd = computed.houseData[h];
+    const sign = hd.signName;
+    const lord = hd.lord;
+    const lordHouse = hd.lordPlacementHouse;
+    const occupants = hd.occupants.length > 0 ? hd.occupants.join(", ") : "None";
+    const aspectsReceived = hd.aspectsReceived.map(a => `${a.planet} (${a.offset}th aspect)`).join(", ") || "None";
+    const connectedChain = [h, lordHouse, ...hd.connectedHouses].filter((v, i, a) => a.indexOf(v) === i);
+    const relevantYogas = yogas.filter(y => y.houses && y.houses.includes(h));
+
+    badge.textContent = `HOUSE ${h}`;
+    const houseSanskritNames = [
+      "Tanu Bhava (Self / Vitality / Personality)", 
+      "Dhana Bhava (Wealth / Family / Speech)", 
+      "Sahaja Bhava (Courage / Younger Siblings / Enterprise)", 
+      "Sukha Bhava (Mother / Happiness / Vehicles / Land)", 
+      "Putra Bhava (Children / Intellect / Purva Punya)", 
+      "Ari Bhava (Debts / Diseases / Daily Service)", 
+      "Kalatra Bhava (Spouse / Business Partnerships)", 
+      "Randhra Bhava (Longevity / Occult / Transformation)", 
+      "Dharma Bhava (Higher Wisdom / Guru / Bhagya)", 
+      "Karma Bhava (Career / Status / Executive Power)", 
+      "Labha Bhava (Gains / Network / Aspiration Fulfillment)", 
+      "Vyaya Bhava (Expenditure / Foreign Travel / Moksha)"
+    ];
+    title.textContent = houseSanskritNames[h - 1];
+
+    body.innerHTML = `
+      <div class="inspect-grid font-outfit">
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Sign (Rashi)</span><span class="inspect-attr-val">${sign}</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">House Lord</span><span class="inspect-attr-val">${lord}</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Lord's Placement</span><span class="inspect-attr-val">House ${lordHouse}</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Occupants</span><span class="inspect-attr-val">${occupants}</span></div>
+        <div class="inspect-attr-box" style="grid-column: 1 / -1;"><span class="inspect-attr-label">Aspects Received (Graha Drishti)</span><span class="inspect-attr-val">${aspectsReceived}</span></div>
+      </div>
+
+      <div class="inspect-chain-box font-outfit">
+        <div class="chain-title">Connected Houses Influence Chain:</div>
+        <div class="chain-nodes">
+          ${connectedChain.map((node, i) => `
+            <span class="chain-pill">H${node}</span>
+            ${i < connectedChain.length - 1 ? '<span class="chain-arrow">→</span>' : ''}
+          `).join('')}
+        </div>
+      </div>
+
+      ${relevantYogas.length > 0 ? `
+        <div class="pada-drilldown-card font-outfit">
+          <div class="pada-title">Active Planetary Yogas in House ${h}:</div>
+          <div class="yoga-footer-pills" style="margin-top: 6px;">
+            ${relevantYogas.map(y => `<span class="yoga-pill" style="background: rgba(245, 158, 11, 0.15); color: var(--gold-light); font-weight: 600;">${y.name}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="inspect-actions font-outfit">
+        <button class="btn-api-key" id="btn-inspect-highlight-chain" style="font-size: 0.78rem;">Highlight Chain</button>
+        <button class="btn-api-key" id="btn-inspect-view-remedies" style="font-size: 0.78rem;">Remedies for ${lord}</button>
+        <button class="btn-gold" id="btn-inspect-ask-ai" style="padding: 6px 14px; font-size: 0.78rem;">Ask AI Guru</button>
+      </div>
+    `;
+
+    document.getElementById("btn-inspect-highlight-chain")?.addEventListener("click", () => selectHouse(h));
+    document.getElementById("btn-inspect-view-remedies")?.addEventListener("click", () => openRemediesModal(lord));
+    document.getElementById("btn-inspect-ask-ai")?.addEventListener("click", () => askAiGuruAboutHouse(h, sign, lord, lordHouse));
+
+  } else if (mode === "planet") {
+    const pl = entityId;
+    const plHouse = p.planetHouses[pl];
+    const plSign = p.planetSigns[pl];
+    const long = p.planets[pl] || 0;
+    const degVal = Math.floor(long % 30);
+    const minVal = Math.round((long % 1) * 60);
+
+    const ownedHouses = [];
+    const startSignIdx = p.lagna.rashiIndex;
+    for (let i = 1; i <= 12; i++) {
+      const sIdx = (startSignIdx + i - 1) % 12;
+      if (SIGN_LORDS[sIdx] === pl) ownedHouses.push(i);
+    }
+
+    const aspectOffsets = PLANET_ASPECT_OFFSETS[pl] || [7];
+    const housesAspected = aspectOffsets.map(off => {
+      let t = (plHouse + off - 1) % 12;
+      return t === 0 ? 12 : t;
+    });
+
+    const conjunct = [];
+    for (const other in p.planetHouses) {
+      if (other !== pl && p.planetHouses[other] === plHouse) conjunct.push(other);
+    }
+
+    // Precise Nakshatra and Pada drill-down
+    const padaInfo = window.VedasyncEngine.getNakshatraPadaDetail(long);
+    const relevantYogas = yogas.filter(y => y.planets && y.planets.includes(pl));
+    const connectedChain = [plHouse, ...ownedHouses, ...housesAspected].filter((v, i, a) => a.indexOf(v) === i);
+
+    badge.textContent = `PLANET`;
+    title.textContent = `${pl} (${padaInfo.nakshatraLord} lorded)`;
+
+    body.innerHTML = `
+      <div class="inspect-grid font-outfit">
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Sign (Rashi)</span><span class="inspect-attr-val">${plSign} (${degVal}° ${minVal}')</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Placed in</span><span class="inspect-attr-val">House ${plHouse}</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Houses Ruled</span><span class="inspect-attr-val">${ownedHouses.length > 0 ? ownedHouses.map(h => `H${h}`).join(", ") : "Shadow Node"}</span></div>
+        <div class="inspect-attr-box"><span class="inspect-attr-label">Aspects Cast (Drishti)</span><span class="inspect-attr-val">${housesAspected.map(h => `H${h}`).join(", ")}</span></div>
+        <div class="inspect-attr-box" style="grid-column: 1 / -1;"><span class="inspect-attr-label">Conjunctions (Yuti)</span><span class="inspect-attr-val">${conjunct.length > 0 ? conjunct.join(", ") : "None in same house"}</span></div>
+      </div>
+
+      <!-- Nakshatra & Pada Drill-Down (Bonus feature) -->
+      <div class="pada-drilldown-card font-outfit">
+        <div class="pada-title">Nakshatra & Pada Drill-down:</div>
+        <div class="pada-detail-text">
+          <strong>${padaInfo.nakshatraName}</strong> (Pada ${padaInfo.pada} • ${padaInfo.purushartha} Purushartha)
+          <br>Navamsha Sign: <strong>${padaInfo.navamshaSign}</strong> (Lord: ${padaInfo.navamshaRuler})
+          <br>Sound Syllable: <em>${padaInfo.akshara}</em> • Gana: ${padaInfo.gana} • Nadi: ${padaInfo.nadi}
+          <br><span style="color: var(--gold-light); margin-top: 4px; display: inline-block;">Karmic Theme:</span> ${padaInfo.karmicTheme}
+        </div>
+      </div>
+
+      <div class="inspect-chain-box font-outfit">
+        <div class="chain-title">${pl}'s Cosmic Network Chain:</div>
+        <div class="chain-nodes">
+          ${connectedChain.map((node, i) => `
+            <span class="chain-pill">H${node}</span>
+            ${i < connectedChain.length - 1 ? '<span class="chain-arrow">→</span>' : ''}
+          `).join('')}
+        </div>
+      </div>
+
+      ${relevantYogas.length > 0 ? `
+        <div class="pada-drilldown-card font-outfit" style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.2);">
+          <div class="pada-title" style="color: var(--accent-purple);">Yogas Involving ${pl}:</div>
+          <div class="yoga-footer-pills" style="margin-top: 6px;">
+            ${relevantYogas.map(y => `<span class="yoga-pill" style="background: rgba(139, 92, 246, 0.2); color: #fff; font-weight: 600;">${y.name}</span>`).join('')}
+          </div>
+        </div>
+      ` : ''}
+
+      <div class="inspect-actions font-outfit">
+        <button class="btn-api-key" id="btn-inspect-highlight-chain" style="font-size: 0.78rem;">Highlight on Chart</button>
+        <button class="btn-api-key" id="btn-inspect-view-remedies" style="font-size: 0.78rem;">View Remedies</button>
+        <button class="btn-gold" id="btn-inspect-ask-ai" style="padding: 6px 14px; font-size: 0.78rem;">Ask AI Guru</button>
+      </div>
+    `;
+
+    document.getElementById("btn-inspect-highlight-chain")?.addEventListener("click", () => selectPlanet(pl, plHouse));
+    document.getElementById("btn-inspect-view-remedies")?.addEventListener("click", () => openRemediesModal(pl));
+    document.getElementById("btn-inspect-ask-ai")?.addEventListener("click", () => askAiGuruAboutPlanet(pl, plHouse, plSign, ownedHouses));
+  }
+}
+
+function closeInspectPanel() {
+  renderInspectPanel(null);
+  clearHighlights();
+}
+
+function askAiGuruAboutHouse(h, sign, lord, lordHouse) {
+  switchTab("tab-chat");
+  if (els.chatInput) {
+    els.chatInput.value = `Please explain the significance of House ${h} in ${sign}, ruled by ${lord} placed in House ${lordHouse} in my Kundli.`;
+    if (els.chatForm) els.chatForm.dispatchEvent(new Event("submit"));
+  }
+}
+
+function askAiGuruAboutPlanet(pl, house, sign, owned) {
+  switchTab("tab-chat");
+  if (els.chatInput) {
+    els.chatInput.value = `Explain the impact of ${pl} placed in House ${house} (${sign}), which rules House ${owned.join(", ")} in my birth chart.`;
+    if (els.chatForm) els.chatForm.dispatchEvent(new Event("submit"));
+  }
+}
+
+/**
+ * -------------------------------------------------------------
+ * 5. INTERACTIVE VIMSHOTTARI DASHA TIMELINE
+ * -------------------------------------------------------------
+ */
+function renderDashaTimeline() {
+  const container = els.dashaTimelineContainer;
+  const activeLabel = els.dashaActiveLabel;
+  const detailCard = els.dashaDetailCard;
+  if (!container || !state.userProfile) return;
+
+  const dashaData = window.VedasyncEngine.calculateVimshottariDasha(state.userProfile, new Date());
+  const activePeriod = dashaData.activePeriod;
+
+  if (activePeriod && activeLabel) {
+    activeLabel.textContent = `Current: ${activePeriod.mahadasha} - ${activePeriod.antardasha} - ${activePeriod.pratyantar}`;
+  }
+
+  // Render Mahadasha horizontal blocks
+  let html = `<div class="dasha-track">`;
+  dashaData.mahadashas.forEach((md, idx) => {
+    const isAct = md.isCurrent ? "active" : "";
+    html += `
+      <div class="dasha-m-block ${isAct}" data-m-idx="${idx}">
+        <div class="dasha-m-header">
+          <span class="dasha-pl-name" style="color: ${md.color};">${md.planet}</span>
+          <span class="dasha-duration font-outfit">${md.durationYears} yrs</span>
+        </div>
+        <div class="dasha-dates font-outfit">${md.startDate.split("-")[0]} - ${md.endDate.split("-")[0]}</div>
+        ${md.isCurrent ? '<span class="dasha-current-badge">CURRENT</span>' : ''}
+      </div>
+    `;
+  });
+  html += `</div>`;
+
+  // Sub-track for Antardashas
+  const activeMIdx = dashaData.mahadashas.findIndex(m => m.isCurrent);
+  const selectedM = dashaData.mahadashas[activeMIdx >= 0 ? activeMIdx : 0];
+
+  html += `<div class="dasha-sub-track" id="dasha-sub-track">`;
+  selectedM.antardashas.forEach((ad, adIdx) => {
+    const isAdAct = ad.isCurrent ? "active" : "";
+    html += `
+      <div class="dasha-ad-block ${isAdAct}" data-m-idx="${activeMIdx >= 0 ? activeMIdx : 0}" data-ad-idx="${adIdx}">
+        <span style="color: ${ad.color}; font-weight: 600;">${ad.planet}</span>
+        <span style="font-size: 0.68rem; color: var(--text-dark); margin-left: 4px;">${ad.startDate.substring(5)}</span>
+      </div>
+    `;
+  });
+  html += `</div>`;
+
+  container.innerHTML = html;
+
+  if (activePeriod && detailCard) {
+    renderDashaDetailCard(activePeriod);
+  }
+
+  // Click listeners on Mahadashas
+  container.querySelectorAll(".dasha-m-block").forEach(block => {
+    block.addEventListener("click", () => {
+      container.querySelectorAll(".dasha-m-block").forEach(b => b.classList.remove("active"));
+      block.classList.add("active");
+      const mIdx = parseInt(block.getAttribute("data-m-idx"));
+      const md = dashaData.mahadashas[mIdx];
+
+      const subTrack = document.getElementById("dasha-sub-track");
+      if (subTrack) {
+        let subHtml = "";
+        md.antardashas.forEach((ad, adIdx) => {
+          subHtml += `
+            <div class="dasha-ad-block ${ad.isCurrent ? "active" : ""}" data-m-idx="${mIdx}" data-ad-idx="${adIdx}">
+              <span style="color: ${ad.color}; font-weight: 600;">${ad.planet}</span>
+              <span style="font-size: 0.68rem; color: var(--text-dark); margin-left: 4px;">${ad.startDate.substring(5)}</span>
+            </div>
+          `;
+        });
+        subTrack.innerHTML = subHtml;
+        bindSubTrackListeners(md);
+      }
+
+      // Highlight on main Kundli chart
+      selectPlanet(md.planet, md.housePlaced);
+
+      renderDashaDetailCard({
+        mahadasha: md.planet,
+        antardasha: md.antardashas[0].planet,
+        pratyantar: md.antardashas[0].pratyantardashas[0].planet,
+        startDate: md.startDate,
+        endDate: md.endDate,
+        housePlaced: md.housePlaced,
+        housesRuled: md.housesRuled,
+        housesAspected: md.housesAspected,
+        connectedChain: [md.housePlaced, ...md.housesRuled, ...md.housesAspected].filter((v, i, a) => a.indexOf(v) === i)
+      });
+    });
+  });
+
+  bindSubTrackListeners(selectedM);
+}
+
+function bindSubTrackListeners(md) {
+  const subTrack = document.getElementById("dasha-sub-track");
+  if (!subTrack) return;
+
+  subTrack.querySelectorAll(".dasha-ad-block").forEach(adBlock => {
+    adBlock.addEventListener("click", () => {
+      subTrack.querySelectorAll(".dasha-ad-block").forEach(b => b.classList.remove("active"));
+      adBlock.classList.add("active");
+      const adIdx = parseInt(adBlock.getAttribute("data-ad-idx"));
+      const ad = md.antardashas[adIdx];
+
+      selectPlanet(ad.planet, ad.housePlaced);
+
+      renderDashaDetailCard({
+        mahadasha: md.planet,
+        antardasha: ad.planet,
+        pratyantar: ad.pratyantardashas[0].planet,
+        startDate: ad.startDate,
+        endDate: ad.endDate,
+        housePlaced: ad.housePlaced,
+        housesRuled: md.housesRuled,
+        housesAspected: md.housesAspected,
+        connectedChain: [md.housePlaced, ad.housePlaced, ...md.housesRuled, ...md.housesAspected].filter((v, i, a) => a.indexOf(v) === i)
+      });
+    });
+  });
+}
+
+function renderDashaDetailCard(period) {
+  const card = els.dashaDetailCard;
+  if (!card) return;
+
+  card.innerHTML = `
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 8px;">
+      <h4 style="color: var(--gold-light); font-size: 1rem;">${period.mahadasha} Mahadasha • ${period.antardasha} Antardasha</h4>
+      <span style="font-size: 0.75rem; color: var(--text-secondary); background: rgba(255,255,255,0.06); padding: 3px 8px; border-radius: 6px;">Period: ${period.startDate} to ${period.endDate}</span>
+    </div>
+    <p style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45; margin-bottom: 8px;">
+      Lord <strong>${period.mahadasha}</strong> is placed in House <strong>${period.housePlaced}</strong>, rules House <strong>${period.housesRuled.join(", ") || "None"}</strong>, and projects Graha Drishti onto House <strong>${period.housesAspected.join(", ")}</strong>.
+    </p>
+    <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+      <span style="font-size: 0.72rem; color: var(--accent-purple); font-weight: 600;">Active House Chain:</span>
+      ${period.connectedChain.map((h, i) => `
+        <span style="padding: 2px 7px; background: rgba(139, 92, 246, 0.2); border-radius: 4px; font-size: 0.75rem; font-weight: 600;">H${h}</span>
+        ${i < period.connectedChain.length - 1 ? '<span style="color: var(--gold-light); font-size: 0.7rem;">→</span>' : ''}
+      `).join('')}
+    </div>
+  `;
+}
+
+/**
+ * -------------------------------------------------------------
+ * 6. AUTHENTIC YOGA FINDER
+ * -------------------------------------------------------------
+ */
+function renderYogaFinder(category = "all") {
+  const grid = els.yogaGrid;
+  if (!grid || !state.userProfile) return;
+
+  const yogas = window.VedasyncEngine.detectYogas(state.userProfile);
+  const filtered = category === "all" ? yogas : yogas.filter(y => y.category.toLowerCase().includes(category.toLowerCase()));
+
+  if (filtered.length === 0) {
+    grid.innerHTML = `
+      <div class="yoga-empty-state font-outfit">
+        <h4 style="color: var(--gold-light); margin-bottom: 6px;">No Major ${category === "all" ? "" : category} Yogas Detected</h4>
+        <p style="font-size: 0.82rem; color: var(--text-dark);">Your chart coordinates were scanned across Parashari combinations. Minor or heavily disputed combinations are excluded to ensure strict traditional authenticity.</p>
+      </div>
+    `;
+    return;
+  }
+
+  let html = "";
+  filtered.forEach(y => {
+    html += `
+      <div class="glass-card yoga-card" data-yoga-id="${y.id}">
+        <div class="yoga-card-top">
+          <span class="yoga-cat-badge">${y.category}</span>
+          <span class="yoga-strength-badge font-outfit">${y.strength} Strength</span>
+        </div>
+        <div class="yoga-title font-outfit">${y.name}</div>
+        <div class="yoga-sanskrit font-outfit">${y.sanskrit}</div>
+        <div class="yoga-meaning font-outfit">${y.meaning}</div>
+        <div class="yoga-footer-pills font-outfit">
+          ${y.planets.map(p => `<span class="yoga-pill">${p}</span>`).join('')}
+          ${y.houses.map(h => `<span class="yoga-pill" style="background: rgba(139, 92, 246, 0.15); color: var(--accent-purple);">H${h}</span>`).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  grid.innerHTML = html;
+
+  // Add click listener to highlight on chart
+  grid.querySelectorAll(".yoga-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const yId = card.getAttribute("data-yoga-id");
+      const yoga = filtered.find(y => y.id === yId);
+      if (yoga) {
+        highlightYogaOnChart(yoga);
+        showToast(`Highlighted ${yoga.name} on Kundli chart.`, "success");
+        els.kundliSvgContainer.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  });
+}
+
+function highlightYogaOnChart(yoga) {
+  state.selectedEntity = { type: "yoga", id: yoga.id, planets: yoga.planets, houses: yoga.houses };
+  drawLagnaChart();
+
+  // If inspect panel open, show first planet of yoga
+  if (yoga.planets && yoga.planets.length > 0) {
+    renderInspectPanel("planet", yoga.planets[0]);
+  }
+}
+
+/**
+ * -------------------------------------------------------------
+ * 7. SYNASTRY / DUAL-CHART COMPATIBILITY VISUALIZER
+ * -------------------------------------------------------------
+ */
+function renderSynastryVisualizer(profileA, profileB) {
+  const panel = els.synastryVisualizerPanel;
+  const containerA = els.synastrySvgChartA;
+  const containerB = els.synastrySvgChartB;
+  if (!panel || !containerA || !containerB) return;
+
+  panel.style.display = "block";
+  els.synastryP1Title.textContent = `${profileA.name} (Self)`;
+  els.synastryP2Title.textContent = `${profileB.name}`;
+
+  // Render miniature North Indian charts for both partners
+  renderMiniChart(containerA, profileA, "A");
+  renderMiniChart(containerB, profileB, "B");
+
+  // Calculate cross-chart connections
+  const crossConnections = window.VedasyncEngine.calculateSynastryConnections(profileA, profileB);
+  state.crossConnections = crossConnections;
+
+  if (els.synastryInteractionText) {
+    if (crossConnections.length > 0) {
+      els.synastryInteractionText.innerHTML = `
+        <strong>${crossConnections.length} Cross-Chart Connections Detected:</strong>
+        <br>${crossConnections.slice(0, 3).map(c => c.meaning).join("<br>")}
+      `;
+    } else {
+      els.synastryInteractionText.textContent = "Click any planet in Partner A or Partner B to explore inter-chart planetary harmonic bonds.";
+    }
+  }
+}
+
+function renderMiniChart(container, profile, chartTag) {
+  container.innerHTML = "";
+  const size = 280;
+  const startSignIndex = profile.lagna.rashiIndex;
+  const activeHouses = profile.planetHouses;
+
+  let svgHtml = `<svg viewBox="0 0 ${size} ${size}" class="svg-container">`;
+  svgHtml += `<rect x="5" y="5" width="270" height="270" class="chart-border" />`;
+  svgHtml += `<line x1="5" y1="5" x2="275" y2="275" class="chart-line" />`;
+  svgHtml += `<line x1="5" y1="275" x2="275" y2="5" class="chart-line" />`;
+  svgHtml += `<polygon points="140,5 275,140 140,275 5,140" fill="none" class="chart-line" />`;
+
+  const miniPolys = [
+    { h: 1, cx: 140, cy: 75 }, { h: 2, cx: 75, cy: 30 }, { h: 3, cx: 30, cy: 75 },
+    { h: 4, cx: 75, cy: 140 }, { h: 5, cx: 30, cy: 205 }, { h: 6, cx: 75, cy: 250 },
+    { h: 7, cx: 140, cy: 205 }, { h: 8, cx: 205, cy: 250 }, { h: 9, cx: 250, cy: 205 },
+    { h: 10, cx: 205, cy: 140 }, { h: 11, cx: 250, cy: 75 }, { h: 12, cx: 205, cy: 30 }
+  ];
+
+  const planetsInHouses = Array.from({ length: 13 }, () => []);
+  planetsInHouses[1].push("Asc");
+  for (const pl in activeHouses) {
+    planetsInHouses[activeHouses[pl]].push(pl);
+  }
+
+  miniPolys.forEach(mp => {
+    const signNum = (startSignIndex + mp.h - 1) % 12 + 1;
+    svgHtml += `<text x="${mp.cx}" y="${mp.cy - 12}" text-anchor="middle" class="chart-text-sign" font-size="11px">${signNum}</text>`;
+
+    const planets = planetsInHouses[mp.h];
+    if (planets.length > 0) {
+      planets.forEach((pl, i) => {
+        const abbrev = pl === "Asc" ? "As" : pl.substring(0, 2);
+        const color = chartTag === "A" ? "var(--gold-light)" : "var(--accent-purple)";
+        svgHtml += `
+          <g class="synastry-planet-node" data-chart="${chartTag}" data-planet="${pl}" data-house="${mp.h}">
+            <text x="${mp.cx}" y="${mp.cy + (i * 12) + 2}" text-anchor="middle" fill="${color}" font-size="10px" font-weight="bold">${abbrev}</text>
+          </g>
+        `;
+      });
+    }
+  });
+
+  svgHtml += `</svg>`;
+  container.innerHTML = svgHtml;
+
+  // Add click handlers on synastry planet nodes
+  container.querySelectorAll(".synastry-planet-node").forEach(node => {
+    node.addEventListener("click", () => {
+      const pl = node.getAttribute("data-planet");
+      const h = parseInt(node.getAttribute("data-house"));
+      selectSynastryPlanet(chartTag, pl, h);
+    });
+  });
+}
+
+function selectSynastryPlanet(chartTag, planetName, houseNum) {
+  const otherTag = chartTag === "A" ? "B" : "A";
+  const cross = (state.crossConnections || []).filter(c => 
+    (c.source.chart === chartTag && c.source.planet === planetName) ||
+    (c.target.chart === chartTag && c.target.planet === planetName)
+  );
+
+  if (els.synastryInteractionText) {
+    if (cross.length > 0) {
+      els.synastryInteractionText.innerHTML = `
+        <h4 style="color: var(--gold-light); margin-bottom: 4px;">Partner ${chartTag}'s ${planetName} (House ${houseNum})</h4>
+        ${cross.map(c => `<div style="margin-top: 4px;"><strong>${c.title}:</strong> ${c.meaning}</div>`).join('')}
+      `;
+    } else {
+      els.synastryInteractionText.innerHTML = `Partner ${chartTag}'s ${planetName} in House ${houseNum} forms independent harmonious dignity with partner's astrological chart.`;
+    }
+  }
+}
+
+/**
+ * -------------------------------------------------------------
+ * 8. SHAREABLE SNAPSHOT GENERATOR
+ * -------------------------------------------------------------
+ */
+function generateShareableSnapshot() {
+  const svg = document.getElementById("kundli-svg-root");
+  const canvas = els.snapshotCanvas;
+  if (!svg || !canvas) return;
+
+  const serializer = new XMLSerializer();
+  const svgStr = serializer.serializeToString(svg);
+  const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new Image();
+  img.onload = () => {
+    canvas.width = 600;
+    canvas.height = 720;
+    const ctx = canvas.getContext("2d");
+
+    // Background gradient
+    const grad = ctx.createLinearGradient(0, 0, 0, 720);
+    grad.addColorStop(0, "#06060c");
+    grad.addColorStop(0.5, "#0d0a1e");
+    grad.addColorStop(1, "#1e1b4b");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 600, 720);
+
+    // Decorative golden border
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(15, 15, 570, 690);
+
+    // Header branding
+    ctx.fillStyle = "#FBBF24";
+    ctx.font = "bold 22px 'Playfair Display', serif";
+    ctx.textAlign = "center";
+    ctx.fillText("VEDASYNC", 300, 50);
+
+    ctx.fillStyle = "#94A3B8";
+    ctx.font = "12px 'Inter', sans-serif";
+    ctx.fillText("Vedic Astrological Kundli Coordinates", 300, 70);
+
+    // User details
+    ctx.fillStyle = "#F8FAFC";
+    ctx.font = "bold 15px 'Outfit', sans-serif";
+    ctx.fillText(`${state.userProfile.name} • ${state.userProfile.dob} (${state.userProfile.tob})`, 300, 100);
+
+    // Draw chart SVG image in center
+    ctx.drawImage(img, 130, 125, 340, 340);
+
+    // Connection or highlight summary banner
+    ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
+    ctx.fillRect(40, 485, 520, 140);
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.25)";
+    ctx.strokeRect(40, 485, 520, 140);
+
+    ctx.fillStyle = "#FBBF24";
+    ctx.font = "bold 14px 'Outfit', sans-serif";
+    ctx.textAlign = "left";
+    ctx.fillText("Astrological Alignment & Drishti Analysis", 60, 515);
+
+    ctx.fillStyle = "#CBD5E1";
+    ctx.font = "12px 'Inter', sans-serif";
+    let summaryText = "Planetary coordinates cast using Nirayana Lahiri Sidereal ephemeris with exact degree house aspects.";
+    if (state.selectedEntity) {
+      if (state.selectedEntity.type === "house") {
+        summaryText = `Highlighted: House ${state.selectedEntity.houseNum} (${state.userProfile.lagna.rashi.split(" ")[0]} Ascendant). Explored house rulership and Graha Drishti connections.`;
+      } else if (state.selectedEntity.type === "planet") {
+        summaryText = `Highlighted: ${state.selectedEntity.id} stationed in House ${state.selectedEntity.houseNum}. Full planetary aspects and lordship network traced.`;
+      }
+    }
+    ctx.fillText(summaryText.substring(0, 80), 60, 545);
+    ctx.fillText(summaryText.substring(80, 160), 60, 565);
+
+    // Footer
+    ctx.fillStyle = "#64748B";
+    ctx.font = "italic 11px 'Inter', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Generated with Mathematical Precision by Vedasync • Vedic AI Platform", 300, 680);
+
+    URL.revokeObjectURL(url);
+
+    // Open snapshot modal
+    if (els.snapshotModal) els.snapshotModal.classList.add("active");
+  };
+
+  img.src = url;
+}
+
+/**
+ * -------------------------------------------------------------
+ * 9. TRADITIONAL REMEDIES PANEL
+ * -------------------------------------------------------------
+ */
+function openRemediesModal(planetName) {
+  const modal = els.remediesModal;
+  const body = els.remediesBody;
+  const title = els.remediesModalTitle;
+  if (!modal || !body) return;
+
+  const targetPlanets = planetName ? [planetName] : ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn", "Rahu", "Ketu"];
+  title.textContent = planetName ? `Traditional Remedies for ${planetName}` : "Classical Planetary Remedies";
+
+  let html = "";
+  targetPlanets.forEach(pl => {
+    const rem = window.VedasyncEngine.getTraditionalRemedies(pl);
+    if (!rem) return;
+
+    html += `
+      <div class="remedy-card font-outfit">
+        <div class="remedy-planet-header">${pl} (Graha Shanti)</div>
+        <div class="remedy-row"><span class="remedy-label">Gemstone:</span> ${rem.gemstone}</div>
+        <div class="remedy-row"><span class="remedy-label">Mantra:</span> <em>${rem.mantra}</em></div>
+        <div class="remedy-row"><span class="remedy-label">Day & Time:</span> ${rem.day}</div>
+        <div class="remedy-row"><span class="remedy-label">Deity:</span> ${rem.deity}</div>
+        <div class="remedy-row"><span class="remedy-label">Charity:</span> ${rem.charity}</div>
+        <div class="remedy-row"><span class="remedy-label">Rudraksha:</span> ${rem.rudraksha}</div>
+      </div>
+    `;
+  });
+
+  body.innerHTML = html;
+  modal.classList.add("active");
+}
+
+/**
+ * -------------------------------------------------------------
+ * 10. GROUNDED AI CONNECTION EXPLAINER
+ * -------------------------------------------------------------
+ */
+function explainConnectionWithAI(conn) {
+  const modal = els.connectionExplainModal;
+  if (!modal) return;
+
+  els.explainTypeBadge.textContent = conn.type;
+  els.explainTitleText.textContent = conn.title;
+  els.explainSourceMeaning.textContent = conn.meaning;
+  modal.classList.add("active");
+
+  const aiBox = els.explainAiText;
+  aiBox.innerHTML = `<div class="loading-spinner"></div> Generating deep Vedic astrological synthesis...`;
+
+  setTimeout(() => {
+    let deepText = ``;
+    if (conn.subType === "aspect") {
+      deepText = `According to Brihat Parashara Hora Shastra, when ${conn.source.label} casts Graha Drishti onto House ${conn.targetHouseNum}, it energizes the underlying bhava with its natural vibrations. Because ${conn.source.label} governs key life principles in your chart, its aspect transforms this house into an active arena of karmic evolution.`;
+    } else if (conn.subType === "conjunction") {
+      deepText = `A classical Yuti (conjunction) signifies a confluence of elemental energies. Here, ${conn.source.label} and ${conn.target.label} occupy the same astronomical sign, causing their planetary rays to blend. Their mutual friendship, dignity, and natural karakas dictate whether this combination acts as a stabilizing force or requires patient self-discipline.`;
+    } else {
+      deepText = `Lordship (Bhava Adhipati) connections represent the pipeline of cosmic energy. The lord of a house represents the owner of that estate: where the lord goes, the destiny of that house follows. In your chart, this lordship connection grounds the outcomes firmly into the target house.`;
+    }
+    aiBox.innerHTML = deepText;
+  }, 400);
+}
+
 
 function renderPlanetaryTable() {
   const tbody = els.planetaryCoordinatesTbody;
@@ -1202,6 +2555,8 @@ function handleCompatibilitySubmit(e) {
     }
 
     els.milanResultPanel.classList.remove("hidden");
+    state.selectedPartnerProfile = p2Profile;
+    renderSynastryVisualizer(state.userProfile, p2Profile);
     showToast(`Compatibility Matching calculated: ${report.totalScore}/36 Gunas`, "success");
     
     // Smooth scroll down to result panel

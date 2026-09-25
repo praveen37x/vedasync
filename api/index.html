@@ -486,6 +486,67 @@
 
       <!-- TAB: LAGNA KUNDLI -->
       <div id="tab-chart" class="tab-panel">
+        
+        <!-- Interactive Chart Toolbar Bar -->
+        <div class="glass-card chart-toolbar-card">
+          <div class="toolbar-left">
+            <button class="chart-ctrl-btn explore-btn" id="btn-explore-mode" title="Toggle Explore Connections Signature Mode">
+              <span class="ctrl-icon">✨</span>
+              <span class="ctrl-label">Explore Connections</span>
+            </button>
+            <label class="switch-control" title="Toggle interactive connector lines on chart">
+              <input type="checkbox" id="toggle-connections" checked>
+              <span class="switch-slider"></span>
+              <span class="switch-text">Show Connections</span>
+            </label>
+            <label class="switch-control" title="Overlay live Gochar planetary transits">
+              <input type="checkbox" id="toggle-transits">
+              <span class="switch-slider"></span>
+              <span class="switch-text">Gochar Transits</span>
+            </label>
+            <div id="transit-date-container" class="transit-date-wrapper hidden">
+              <label for="transit-date-picker" class="transit-date-label">Date:</label>
+              <input type="date" id="transit-date-picker" class="glass-date-input" title="Check transits for any past or future date">
+            </div>
+          </div>
+
+          <div class="toolbar-right">
+            <button class="chart-ctrl-btn" id="btn-clear-highlights" title="Clear active highlights and line connectors">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+              <span>Reset</span>
+            </button>
+            <button class="chart-ctrl-btn share-btn" id="btn-share-chart" title="Generate shareable chart snapshot card">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92c0-1.61-1.31-2.92-2.92-2.92z"/></svg>
+              <span>Share Snapshot</span>
+            </button>
+            <button class="chart-ctrl-btn" id="btn-print-report" title="Print / Save Astrological Report">
+              <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+              <span>PDF Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Life Area Lens Selector Bar -->
+        <div class="life-area-lens-bar font-outfit">
+          <span class="lens-label">Life Area Lens:</span>
+          <div class="lens-pills" id="lens-pills-container">
+            <button class="lens-pill active" data-lens="all"><span class="pill-icon">🌌</span><span>All Chart</span></button>
+            <button class="lens-pill" data-lens="career"><span class="pill-icon">💼</span><span>Career</span></button>
+            <button class="lens-pill" data-lens="marriage"><span class="pill-icon">💍</span><span>Marriage</span></button>
+            <button class="lens-pill" data-lens="finance"><span class="pill-icon">💰</span><span>Finance</span></button>
+            <button class="lens-pill" data-lens="health"><span class="pill-icon">🌿</span><span>Health</span></button>
+            <button class="lens-pill" data-lens="education"><span class="pill-icon">📚</span><span>Education</span></button>
+            <button class="lens-pill" data-lens="spirituality"><span class="pill-icon">🕉️</span><span>Spirituality</span></button>
+            <button class="lens-pill" data-lens="property"><span class="pill-icon">🏠</span><span>Property</span></button>
+          </div>
+        </div>
+
+        <!-- Explore Connections Status Banner (Visible in Explore Mode) -->
+        <div id="explore-status-banner" class="explore-status-banner hidden">
+          <div class="banner-badge">✨ Explore Connections Active</div>
+          <div class="banner-text" id="explore-banner-text">Click any house or planet to trace its aspects, lordships, and conjunction chains.</div>
+        </div>
+
         <div class="panel-layout col-2">
           
           <!-- Chart Visualizer Card -->
@@ -500,12 +561,6 @@
                 </select>
               </div>
               <div class="chart-header-right">
-                <button class="btn-api-key" id="btn-print-report" title="Print / Save Astrological Report" style="background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); color: var(--text-primary); margin-right: 8px;">
-                  <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
-                    <path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/>
-                  </svg>
-                  <span>PDF Report</span>
-                </button>
                 <div class="toggle-group">
                   <button class="toggle-btn active" id="btn-style-north">North</button>
                   <button class="toggle-btn" id="btn-style-south">South</button>
@@ -513,61 +568,160 @@
               </div>
             </div>
             
-            <div class="chart-display-container">
+            <div class="chart-display-container" id="chart-main-wrapper">
               <!-- Rendered via Javascript SVG -->
               <div id="kundli-svg-container" class="svg-container"></div>
+
+              <!-- Floating Connection Card (Hover / Click on Line or Node) -->
+              <div id="connection-floating-card" class="connection-floating-card hidden">
+                <div class="conn-card-header">
+                  <span class="conn-type-badge" id="conn-card-type">Graha Drishti</span>
+                  <button class="conn-card-close" id="btn-close-conn-card">&times;</button>
+                </div>
+                <h4 id="conn-card-title" class="conn-card-title">Saturn → House 10</h4>
+                <p id="conn-card-meaning" class="conn-card-meaning">Saturn casts full Graha Drishti onto House 10.</p>
+                <div class="conn-card-actions">
+                  <button class="btn-explain-conn" id="btn-explain-conn">Explain with AI Guru</button>
+                </div>
+              </div>
             </div>
             
+            <div class="chart-legend-bar font-outfit">
+              <div class="legend-item"><span class="legend-dot aspect-dot"></span><span>Drishti (Aspect)</span></div>
+              <div class="legend-item"><span class="legend-dot conj-dot"></span><span>Conjunction</span></div>
+              <div class="legend-item"><span class="legend-dot lord-dot"></span><span>Lordship</span></div>
+              <div class="legend-item" id="legend-transit-item" style="display:none;"><span class="legend-dot transit-dot"></span><span>Gochar (Transit)</span></div>
+            </div>
+
+            <!-- Life Area Lens Summary Card (shown when lens is active) -->
+            <div id="life-area-card" class="life-area-summary-card hidden">
+              <div class="life-card-header">
+                <div class="life-card-title-wrap">
+                  <span class="life-card-icon" id="life-card-icon">💼</span>
+                  <h3 id="life-card-title">Career & Profession</h3>
+                </div>
+                <span class="life-card-houses" id="life-card-houses-badge">Houses: 10, 2, 6, 11</span>
+              </div>
+              <p id="life-card-meaning" class="life-card-desc">Analyzing 10th house (Karma), 2nd (wealth), 6th (service), and 11th (gains).</p>
+              <div class="life-card-grid" id="life-card-grid"></div>
+              <div class="life-card-yogas" id="life-card-yogas"></div>
+            </div>
+
             <div class="chart-disclaimer font-outfit">
-              <p>House 1 (Ascendant) starts at the top-middle diamond (North) or marked box (South).</p>
+              <p>House 1 (Ascendant) starts at top-middle diamond (North) or marked box (South). Click any planet/house to inspect.</p>
             </div>
           </div>
 
-          <!-- Planetary Coordinates Card -->
-          <div class="glass-card planetary-details-card">
-            <div class="card-header">
-              <h2>Cosmic Coordinates</h2>
-              <p>Planetary alignments at the exact moment of birth</p>
-            </div>
-            
-            <div class="scroll-table-wrapper">
-              <table class="astrology-table">
-                <thead>
-                  <tr>
-                    <th>Planet</th>
-                    <th>Rashi (Sign)</th>
-                    <th>Nirayana Long.</th>
-                    <th>House</th>
-                  </tr>
-                </thead>
-                <tbody id="planetary-coordinates-tbody">
-                  <!-- Generated via JS -->
-                </tbody>
-              </table>
+          <!-- Unified Inspect Panel (House + Planet Reusable Component) -->
+          <div class="glass-card unified-inspect-card" id="unified-inspect-panel">
+            <div class="inspect-header" id="inspect-header" style="display:none;">
+              <div class="inspect-title-group">
+                <span class="inspect-badge" id="inspect-badge">HOUSE 1</span>
+                <h2 id="inspect-title">Ascendant / Tanu Bhava</h2>
+              </div>
+              <button class="btn-close-inspect" id="btn-close-inspect" title="Reset Inspect View">&times;</button>
             </div>
 
-            <!-- Natal Attributes Brief -->
-            <div class="natal-attributes-grid font-outfit">
-              <div class="attr-box">
-                <span class="attr-label">Ascendant (Lagna)</span>
-                <span class="attr-val" id="natal-lagna-val">Aries</span>
+            <div class="inspect-body" id="inspect-body" style="display:none;">
+              <!-- Dynamically populated for House or Planet mode -->
+            </div>
+
+            <!-- Default Cosmic Coordinates Table (shown when nothing inspected) -->
+            <div class="inspect-default-view" id="inspect-default-view">
+              <div class="card-header">
+                <h2>Cosmic Coordinates</h2>
+                <p>Planetary alignments at the exact moment of birth</p>
               </div>
-              <div class="attr-box">
-                <span class="attr-label">Moon Nakshatra</span>
-                <span class="attr-val" id="natal-nakshatra-val">Ashwini</span>
+              
+              <div class="scroll-table-wrapper">
+                <table class="astrology-table">
+                  <thead>
+                    <tr>
+                      <th>Planet</th>
+                      <th>Rashi (Sign)</th>
+                      <th>Nirayana Long.</th>
+                      <th>House</th>
+                    </tr>
+                  </thead>
+                  <tbody id="planetary-coordinates-tbody">
+                    <!-- Generated via JS -->
+                  </tbody>
+                </table>
               </div>
-              <div class="attr-box">
-                <span class="attr-label">Nakshatra Lord</span>
-                <span class="attr-val" id="natal-lord-val">Ketu</span>
-              </div>
-              <div class="attr-box">
-                <span class="attr-label">Moon Rashi</span>
-                <span class="attr-val" id="natal-rashi-val">Mesha</span>
+
+              <!-- Natal Attributes Brief -->
+              <div class="natal-attributes-grid font-outfit">
+                <div class="attr-box">
+                  <span class="attr-label">Ascendant (Lagna)</span>
+                  <span class="attr-val" id="natal-lagna-val">Aries</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Moon Nakshatra</span>
+                  <span class="attr-val" id="natal-nakshatra-val">Ashwini</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Nakshatra Lord</span>
+                  <span class="attr-val" id="natal-lord-val">Ketu</span>
+                </div>
+                <div class="attr-box">
+                  <span class="attr-label">Moon Rashi</span>
+                  <span class="attr-val" id="natal-rashi-val">Mesha</span>
+                </div>
               </div>
             </div>
+
           </div>
 
         </div>
+
+        <!-- SECTION: VIMSHOTTARI DASHA TIMELINE -->
+        <div class="glass-card dasha-section-card" id="dasha-timeline-section">
+          <div class="section-header-row">
+            <div>
+              <div class="section-eyebrow">Cosmic Chronology (120-Year Vimshottari)</div>
+              <h2>Interactive Dasha Timeline</h2>
+            </div>
+            <div class="dasha-active-badge" id="dasha-active-badge">
+              <span class="pulse-indicator"></span>
+              <span id="dasha-active-label">Mahadasha Timeline</span>
+            </div>
+          </div>
+          <p class="section-subtext">Click any Mahadasha, Antardasha, or Pratyantardasha to reveal planetary house placements, aspect chains, and highlight connected houses on your Kundli.</p>
+
+          <!-- Horizontal Timeline Container -->
+          <div class="dasha-timeline-container" id="dasha-timeline-container">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Active Selected Dasha Details Card -->
+          <div class="dasha-detail-card" id="dasha-detail-card">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
+        <!-- SECTION: AUTHENTIC YOGA FINDER -->
+        <div class="glass-card yoga-finder-card" id="yoga-finder-section">
+          <div class="section-header-row">
+            <div>
+              <div class="section-eyebrow">Planetary Yogas (Celestial Combinations)</div>
+              <h2>Yoga Finder</h2>
+            </div>
+            <div class="yoga-filter-pills" id="yoga-filter-pills">
+              <button class="filter-pill active" data-filter="all">All Yogas</button>
+              <button class="filter-pill" data-filter="Raj Yoga">Raj Yogas</button>
+              <button class="filter-pill" data-filter="Dhana Yoga">Dhana Yogas</button>
+              <button class="filter-pill" data-filter="Pancha Mahapurusha">Mahapurusha</button>
+              <button class="filter-pill" data-filter="Vipreet Raj">Vipreet Raj</button>
+            </div>
+          </div>
+          <p class="section-subtext">Vedic planetary configurations computed from your real planetary positions, lordships, and aspects. Click any yoga card to highlight its responsible planets and houses on the chart.</p>
+
+          <!-- Yoga Cards Grid -->
+          <div class="yoga-grid" id="yoga-grid">
+            <!-- Rendered via JS -->
+          </div>
+        </div>
+
       </div>
 
       <!-- TAB: KUNDLI MILAN -->
@@ -659,6 +813,37 @@
                 </tbody>
               </table>
             </div>
+
+            <!-- Dual-Chart Synastry Visualizer (Guna Milan Context) -->
+            <div class="synastry-visualizer-section" id="synastry-visualizer-panel">
+              <div class="section-header-row">
+                <div>
+                  <div class="section-eyebrow">Matchmaking Synastry Layer</div>
+                  <h3>Dual Kundli Cross-Chart Aspects</h3>
+                </div>
+                <div class="synastry-view-toggle">
+                  <button type="button" class="toggle-btn active" id="btn-synastry-side">Side-by-Side</button>
+                  <button type="button" class="toggle-btn" id="btn-synastry-stack">Stacked</button>
+                </div>
+              </div>
+              <p class="section-subtext">Click any planet in Partner A to trace its aspects and conjunctions in Partner B's chart using cross-chart connector lines.</p>
+
+              <div class="synastry-charts-wrapper side-by-side" id="synastry-charts-container">
+                <div class="synastry-chart-box">
+                  <div class="synastry-chart-title p1-color" id="synastry-p1-title">Partner A (Self)</div>
+                  <div id="synastry-svg-chart-a" class="synastry-svg-container"></div>
+                </div>
+                <div class="synastry-chart-box">
+                  <div class="synastry-chart-title p2-color" id="synastry-p2-title">Partner B</div>
+                  <div id="synastry-svg-chart-b" class="synastry-svg-container"></div>
+                </div>
+              </div>
+
+              <div class="synastry-interaction-card" id="synastry-interaction-card">
+                <div id="synastry-interaction-text">Click any planet in either chart to reveal inter-chart planetary harmonic bonds.</div>
+              </div>
+            </div>
+
           </div>
 
         </div>
@@ -1294,6 +1479,88 @@
             </svg>
           </button>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SHAREABLE SNAPSHOT -->
+  <div class="modal-overlay" id="snapshot-modal">
+    <div class="glass-card modal-content animate-scale-up snapshot-modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">📸</span>
+          <h2>Kundli Snapshot Card</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-snapshot">&times;</button>
+      </div>
+      <p class="modal-subtext">Share your planetary alignments and highlighted connections card with your network or astrologer.</p>
+
+      <div class="snapshot-preview-area">
+        <canvas id="snapshot-canvas" class="snapshot-canvas"></canvas>
+      </div>
+
+      <div class="snapshot-actions-row">
+        <button type="button" class="btn-gold font-outfit" id="btn-download-snapshot">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+          <span>Download PNG</span>
+        </button>
+        <button type="button" class="btn-api-key" id="btn-copy-snapshot">
+          <svg class="icon-small" fill="currentColor" viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+          <span>Copy Image / Share Link</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: TRADITIONAL VEDIC REMEDIES -->
+  <div class="modal-overlay" id="remedies-modal">
+    <div class="glass-card modal-content animate-scale-up remedies-modal-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">🕉️</span>
+          <h2 id="remedies-modal-title">Traditional Astrological Remedies</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-remedies">&times;</button>
+      </div>
+      <p class="modal-subtext" id="remedies-modal-subtitle">Time-honored classical practices for planetary balance and energetic harmony.</p>
+
+      <div class="remedies-body" id="remedies-body">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="remedies-disclaimer-box font-outfit">
+        <strong>Cultural & Educational Notice:</strong> Astrological remedies are presented solely for spiritual reflection and traditional heritage. They are non-prescriptive and should not substitute medical, financial, or legal counsel.
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GROUNDED AI CONNECTION EXPLANATION -->
+  <div class="modal-overlay" id="connection-explain-modal">
+    <div class="glass-card modal-content animate-scale-up conn-explain-content">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="pill-icon">🔮</span>
+          <h2 id="explain-modal-title">Connection Deep-Dive</h2>
+        </div>
+        <button class="btn-close-modal" id="btn-close-explain">&times;</button>
+      </div>
+      
+      <div class="explain-modal-body">
+        <div class="explain-summary-card">
+          <span class="conn-type-badge" id="explain-type-badge">Graha Drishti</span>
+          <h3 id="explain-title-text">Saturn → House 10 (10th Aspect)</h3>
+          <p id="explain-source-meaning" class="explain-source-meaning">Calculated from natal planetary positions and classical Parashari principles.</p>
+        </div>
+
+        <div class="explain-ai-box">
+          <div class="explain-ai-header">
+            <span class="ai-sparkle">✨</span>
+            <h4>Astrosage-Grade Deep Vedic Analysis</h4>
+          </div>
+          <div class="explain-ai-text" id="explain-ai-text">
+            <div class="loading-spinner"></div> Synthesizing astrological house lordship, nakshatra, and aspect alignments...
+          </div>
+        </div>
       </div>
     </div>
   </div>
