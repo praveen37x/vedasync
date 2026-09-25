@@ -801,8 +801,8 @@ function loadDashboardModules() {
   // 7. Initialize advanced feature listeners
   initAdvancedFeaturesListeners();
 
-  // Go to Chat view by default
-  switchTab("tab-chat");
+  // Open Lagna Kundli view by default so user immediately sees their chart
+  switchTab("tab-chart");
 }
 
 let advancedListenersInitialized = false;

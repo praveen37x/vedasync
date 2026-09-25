@@ -166,6 +166,18 @@ body {
   transform: translateY(1px);
 }
 
+.btn-icon,
+.btn-gold svg,
+.btn-secondary svg {
+  width: 18px !important;
+  height: 18px !important;
+  max-width: 18px !important;
+  max-height: 18px !important;
+  flex-shrink: 0 !important;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .btn-secondary {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
